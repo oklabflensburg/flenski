@@ -156,6 +156,22 @@
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-rag</artifactId>
 		</dependency>
+		<!-- gRPC dependencies for Qdrant client -->
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-netty-shaded</artifactId>
+			<version>1.66.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-protobuf</artifactId>
+			<version>1.66.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-stub</artifactId>
+			<version>1.66.0</version>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

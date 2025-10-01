@@ -11,12 +11,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.flenski.dto.Record;
+import com.flenski.service.IndexerService;
 
 @RestController
 @RequestMapping("/api")
 public class IndexController {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexController.class);
+    private final IndexerService indexerService;
+
+    public IndexController(IndexerService indexerService) {
+        this.indexerService = indexerService;
+    }
 
     @PostMapping(value = "/index", consumes = "application/json")
     public ResponseEntity<String> index(@RequestBody List<Record> records) {
@@ -29,6 +35,7 @@ public class IndexController {
         }
         
         // TODO: Call IndexerService to process records
+        indexerService.index(records);
         String response = "Received " + records.size() + " records for indexing";
         logger.info("Sending response: {}", response);
         
