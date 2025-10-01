@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "FlensKI Indexer Schema",
+    "description": "This schema describes the data structure for documents which can be added to the knowledge base of the AI assistant.",
+    "version": "1.0",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "title": "Record",
+        "properties": {
+            "sourceIdentifier": {
+                "type": "string",
+                "description": "An identifier of the source. E.g. a filename or a title of a website."
+            },
+            "sourceName": {
+                "type": "string",
+                "description": "A human readable reference about the content. E.g. the main heading of the document, the name of an event."
+            },
+            "sourceUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "Full URL of the source"
+            },
+            "sourceDateTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "UTC format. The date (and time) the source is referring to. E.g. the date of an event (not the date when the source has been downloaded). If time is not relevant, use 00:00.00"
+            },
+            "discoveryDateTime": {
+                "type": "string",
+                "format": "date-time",
+                "description": "UTC format. The date and time where the source has been discovered. E.g. the datetime where a web source has been scraped."
+            },
+            "sourceType": {
+                "type": "string",
+                "enum": ["PDF", "Website"],
+                "description": "Type of the source."
+            },
+            "content": {
+                "type": "string",
+                "description": "Text content which will be added to the knowledge base. If left empty, the indexer will try to download from the sourceUrl provided."
+            }
+        },
+        "required": [
+            "sourceIdentifier",
+            "sourceUrl",
+            "discoveryDateTime",
+            "sourceType"
+        ]
+    }
+}
