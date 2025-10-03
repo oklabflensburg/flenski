@@ -1,4 +1,5 @@
 *.log
+logs/
 *.gz
 notes.md
 .vscode
