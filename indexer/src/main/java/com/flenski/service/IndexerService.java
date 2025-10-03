@@ -25,6 +25,10 @@ public class IndexerService {
         this.vectorStore = vectorStore;
     }
 
+    public void index(Record record) {
+        index(List.of(record));
+    }
+
     public void index(List<Record> records) {
         logger.info("Indexing {} records", records.size());
         

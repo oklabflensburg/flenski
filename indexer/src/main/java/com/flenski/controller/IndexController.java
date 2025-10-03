@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.flenski.dto.Record;
 import com.flenski.service.IndexerService;
+import com.flenski.service.PdfConverterService;
 
 @RestController
 @RequestMapping("/api")
@@ -19,9 +20,11 @@ public class IndexController {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexController.class);
     private final IndexerService indexerService;
+    private final PdfConverterService pdfConverterService;
 
-    public IndexController(IndexerService indexerService) {
+    public IndexController(IndexerService indexerService, PdfConverterService pdfConverterService) {
         this.indexerService = indexerService;
+        this.pdfConverterService = pdfConverterService;
     }
 
     @PostMapping(value = "/index", consumes = "application/json")
@@ -32,9 +35,14 @@ public class IndexController {
             Record firstRecord = records.get(0);
             logger.info("First record - sourceIdentifier: {}, sourceType: {}", 
                 firstRecord.getSourceIdentifier(), firstRecord.getSourceType());
+
+
+            Record convertedRecord = pdfConverterService.index(firstRecord.getSourceUrl());
+            indexerService.index(convertedRecord);
+            logger.info("Indexed record with sourceIdentifier: {}", convertedRecord.getSourceIdentifier());
         }
         
-        indexerService.index(records);
+        
         String response = "Received " + records.size() + " records for indexing";
         return ResponseEntity.ok(response);
     }
