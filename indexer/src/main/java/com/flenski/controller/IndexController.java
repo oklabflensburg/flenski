@@ -34,11 +34,8 @@ public class IndexController {
                 firstRecord.getSourceIdentifier(), firstRecord.getSourceType());
         }
         
-        // TODO: Call IndexerService to process records
         indexerService.index(records);
         String response = "Received " + records.size() + " records for indexing";
-        logger.info("Sending response: {}", response);
-        
         return ResponseEntity.ok(response);
     }
 }
