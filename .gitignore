@@ -3,3 +3,4 @@ logs/
 *.gz
 notes.md
 .vscode
+data/

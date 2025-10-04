@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.flenski.dto.Record;
 import com.flenski.service.IndexerService;
 import com.flenski.service.PdfConverterService;
+import com.flenski.service.QueueService;
 
 @RestController
 @RequestMapping("/api")
@@ -21,10 +22,12 @@ public class IndexController {
     private static final Logger logger = LoggerFactory.getLogger(IndexController.class);
     private final IndexerService indexerService;
     private final PdfConverterService pdfConverterService;
+    private final QueueService queueService;
 
-    public IndexController(IndexerService indexerService, PdfConverterService pdfConverterService) {
+    public IndexController(IndexerService indexerService, PdfConverterService pdfConverterService, QueueService queueService) {
         this.indexerService = indexerService;
         this.pdfConverterService = pdfConverterService;
+        this.queueService = queueService;
     }
 
     @PostMapping(value = "/index", consumes = "application/json")
@@ -32,18 +35,23 @@ public class IndexController {
         logger.info("Received POST request to /api/index with {} records", records.size());
         
         if (!records.isEmpty()) {
+            /* 
             Record firstRecord = records.get(0);
-            logger.info("First record - sourceIdentifier: {}, sourceType: {}", 
-                firstRecord.getSourceIdentifier(), firstRecord.getSourceType());
-
-
             Record convertedRecord = pdfConverterService.index(firstRecord.getSourceUrl());
-            indexerService.index(convertedRecord);
-            logger.info("Indexed record with sourceIdentifier: {}", convertedRecord.getSourceIdentifier());
+            IndexResult result = indexerService.index(convertedRecord);
+            
+            logger.info("Indexing completed - processed: {}, skipped: {}, indexed: {}", 
+                       result.getProcessedRecords(), result.getSkippedRecords(), result.getIndexedDocuments());
+            */
+
+            var queueResult = queueService.add(records);
+            String response = String.format("Queueing completed - added: %d, duplicates: %d", 
+                                            queueResult.getAdded(), queueResult.getDuplicates());
+            logger.info(response);
+            
+            return ResponseEntity.ok(response);
         }
         
-        
-        String response = "Received " + records.size() + " records for indexing";
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok("No records received for indexing");
     }
 }

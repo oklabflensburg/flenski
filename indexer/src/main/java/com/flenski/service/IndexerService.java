@@ -13,37 +13,42 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.flenski.dto.IndexResult;
 import com.flenski.dto.Record;
+import com.flenski.repository.QueueItemRepository;
 
 @Service
 public class IndexerService {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexerService.class);
     private final VectorStore vectorStore;
+    private final QueueItemRepository queueItemRepository;
     
-    public IndexerService(VectorStore vectorStore) {
+    public IndexerService(VectorStore vectorStore, QueueItemRepository queueItemRepository) {
         this.vectorStore = vectorStore;
+        this.queueItemRepository = queueItemRepository;
     }
 
-    public void index(Record record) {
-        index(List.of(record));
+    public IndexResult index(Record record) {
+        return index(List.of(record));
     }
 
-    public void index(List<Record> records) {
-        logger.info("Indexing {} records", records.size());
+    public IndexResult index(List<Record> records) {
         
+        if (records.isEmpty()) {
+            logger.info("No new records to index - all records already exist");
+            return new IndexResult(records.size(), 0, 0, 0);
+        }
+
         List<Document> documents = records.stream()
                 .filter(record -> StringUtils.hasText(record.getContent()))
                 .map(this::mapRecordToDocument)
                 .collect(Collectors.toList());
         
-        if (documents.isEmpty()) {
-            logger.warn("No valid documents to index (all records have empty content)");
-            return;
-        }
-        
         vectorStore.add(documents);
         logger.info("Successfully indexed {} documents", documents.size());
+
+        return new IndexResult(records.size(), 0, 0, documents.size());
     }
     
     private Document mapRecordToDocument(Record record) {
