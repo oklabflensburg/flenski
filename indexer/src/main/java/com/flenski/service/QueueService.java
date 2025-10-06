@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.flenski.dto.QueueResult;
@@ -27,29 +28,39 @@ public class QueueService {
     public QueueResult add(List<Record> records) {
 
         AtomicInteger amountDuplicates = new AtomicInteger(0);
+        AtomicInteger amountSaved = new AtomicInteger(0);
 
         List<Record> filteredRecords = records.stream()
-        .filter(record -> {
-            if (queueItemRepository.existsByIdentifier(record.getSourceIdentifier())){
-                amountDuplicates.incrementAndGet();
-                return false;
-            } else {
-                return true;
-            }
-        })
-        .collect(Collectors.toList());
+                .filter(record -> {
+                    if (queueItemRepository.existsByIdentifier(record.getSourceIdentifier())) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                })
+                .collect(Collectors.toList());
 
         List<QueueItem> queueItems = filteredRecords.stream()
-            .map(this::mapRecordToQueueItem)
-            .collect(Collectors.toList());
+                .map(this::mapRecordToQueueItem)
+                .collect(Collectors.toList());
 
-        queueItemRepository.saveAll(queueItems);
-        return new QueueResult(queueItems.size(), amountDuplicates.get()); 
+        for (Record record : records) {
+            QueueItem queueItem = mapRecordToQueueItem(record);
+            try {
+                queueItemRepository.save(queueItem);
+            } catch (DataIntegrityViolationException e) {
+                amountDuplicates.incrementAndGet();
+                continue;
+            }
+            amountSaved.incrementAndGet();
+        }
+
+        return new QueueResult(amountSaved.get(), amountDuplicates.get());
     }
 
-     private QueueItem mapRecordToQueueItem(Record record) {
+    private QueueItem mapRecordToQueueItem(Record record) {
         QueueItem queueItem = new QueueItem();
-        queueItem.setIdentifier(record.getSourceIdentifier());
+        queueItem.setIdentifier(record.createHash());
         queueItem.setRecord(record);
         return queueItem;
     }

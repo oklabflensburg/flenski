@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.flenski.dto.QueueResult;
 import com.flenski.dto.Record;
 import com.flenski.service.IndexerService;
 import com.flenski.service.PdfConverterService;
@@ -44,7 +45,7 @@ public class IndexController {
                        result.getProcessedRecords(), result.getSkippedRecords(), result.getIndexedDocuments());
             */
 
-            var queueResult = queueService.add(records);
+            QueueResult queueResult = queueService.add(records);
             String response = String.format("Queueing completed - added: %d, duplicates: %d", 
                                             queueResult.getAdded(), queueResult.getDuplicates());
             logger.info(response);
