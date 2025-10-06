@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.flenski.dto.QueueResult;
@@ -56,6 +57,10 @@ public class QueueService {
         }
 
         return new QueueResult(amountSaved.get(), amountDuplicates.get());
+    }
+
+    public List<QueueItem> getNext(int limit) {
+        return queueItemRepository.findAllByOrderByCreatedAtAsc(PageRequest.of(0, limit));
     }
 
     private QueueItem mapRecordToQueueItem(Record record) {

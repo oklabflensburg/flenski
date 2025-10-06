@@ -57,6 +57,7 @@ public class IndexerService {
         metadata.put("sourceName", record.getSourceName());
         metadata.put("sourceUrl", record.getSourceUrl());
         metadata.put("sourceType", record.getSourceType().toString());
+        metadata.put("uuid", record.createHash());
         
         if (record.getSourceDateTime() != null) {
             metadata.put("sourceDateTime", record.getSourceDateTime().toString());
