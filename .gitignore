@@ -4,3 +4,4 @@ logs/
 notes.md
 .vscode
 data/
+.env

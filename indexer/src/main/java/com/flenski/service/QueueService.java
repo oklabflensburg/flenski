@@ -63,6 +63,10 @@ public class QueueService {
         return queueItemRepository.findAllByOrderByCreatedAtAsc(PageRequest.of(0, limit));
     }
 
+    public void delete(QueueItem queueItem) {
+        queueItemRepository.delete(queueItem);
+    }
+
     private QueueItem mapRecordToQueueItem(Record record) {
         QueueItem queueItem = new QueueItem();
         queueItem.setIdentifier(record.createHash());

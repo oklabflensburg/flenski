@@ -56,18 +56,18 @@ public class IndexController {
         List<QueueItem> queueItems = queueService.getNext(10);
 
         if (!queueItems.isEmpty()) {
-            List<Record> recordsToProcess = queueItems.stream()
-                    .map(QueueItem::getRecord)
-                    .toList();
-            recordsToProcess.forEach(record -> {
+            for (int i = 0; i < queueItems.size(); i++) {
+                QueueItem queueItem = queueItems.get(i);
+                Record record = queueItem.getRecord();
                 try {
                     Record convertedRecord = pdfConverterService.index(record.getSourceUrl());
                     indexerService.index(convertedRecord);
+                    queueService.delete(queueItem);
 
                 } catch (Exception e) {
                     logger.error("Error processing record: {}", record.getSourceUrl(), e);
                 }
-            });
+            };
         }
 
         String response = "Indexing completed";
