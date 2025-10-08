@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -34,21 +35,27 @@ public class IndexerService {
     }
 
     public IndexResult index(List<Record> records) {
-        
         if (records.isEmpty()) {
             logger.info("No new records to index - all records already exist");
             return new IndexResult(records.size(), 0, 0, 0);
         }
 
-        List<Document> documents = records.stream()
+        TokenTextSplitter textSplitter = TokenTextSplitter
+            .builder()
+            .withChunkSize(200)
+            .withMaxNumChunks(400)
+            .build();
+
+        List<Document> splitDocuments = records.stream()
                 .filter(record -> StringUtils.hasText(record.getContent()))
                 .map(this::mapRecordToDocument)
+                .flatMap(document -> textSplitter.split(document).stream())
                 .collect(Collectors.toList());
-        
-        vectorStore.add(documents);
-        logger.info("Successfully indexed {} documents", documents.size());
 
-        return new IndexResult(records.size(), 0, 0, documents.size());
+        vectorStore.add(splitDocuments);
+        logger.info("Successfully indexed {} documents", splitDocuments.size());
+
+        return new IndexResult(records.size(), 0, 0, splitDocuments.size());
     }
     
     private Document mapRecordToDocument(Record record) {
@@ -57,7 +64,7 @@ public class IndexerService {
         metadata.put("sourceName", record.getSourceName());
         metadata.put("sourceUrl", record.getSourceUrl());
         metadata.put("sourceType", record.getSourceType().toString());
-        metadata.put("uuid", record.createHash());
+        metadata.put("hash", record.createHash());
         
         if (record.getSourceDateTime() != null) {
             metadata.put("sourceDateTime", record.getSourceDateTime().toString());

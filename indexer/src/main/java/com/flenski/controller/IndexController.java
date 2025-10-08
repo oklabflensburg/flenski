@@ -21,7 +21,6 @@ import com.flenski.service.QueueService;
 @RestController
 @RequestMapping("/api")
 public class IndexController {
-
     private static final Logger logger = LoggerFactory.getLogger(IndexController.class);
     private final IndexerService indexerService;
     private final PdfConverterService pdfConverterService;
