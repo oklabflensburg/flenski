@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+  <div class="bg-white shadow-lg rounded-2xl p-6 w-full" style="width: 768px">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">FlensKI</h1>
+    
+    <div>
+      <textarea id="question" placeholder="Hi!"
+        class="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+    </div>
+    
+    <button id="askBtn"
+      class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+      Senden
+    </button>
+    
+    <div id="answer" class="mt-6 p-4 bg-gray-50 border rounded-lg text-gray-700 min-h-[80px]">
+      
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("askBtn").addEventListener("click", async () => {
+      const question = document.getElementById("question").value.trim();
+      const answerBox = document.getElementById("answer");
+
+      if (!question) {
+        answerBox.textContent = "Please enter a question.";
+        return;
+      }
+
+      answerBox.textContent = "Suche...";
+
+      try {
+
+        const response = await fetch(`http://localhost:8080/api/chat?message=${encodeURIComponent(question)}`);
+        
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json(); 
+
+ let html = `<p class="mb-4 whitespace-pre-line">${data.answer}</p>`;
+
+ function formatDateTime(dt) {
+  if (!dt) return "-";
+  const d = new Date(dt);
+  if (isNaN(d)) return dt;
+  return d.toLocaleString("de-DE", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+}
+
+      if (Array.isArray(data.sources)) {
+        html += `<h2 class="font-semibold mt-4 mb-2">Quellen:</h2><ul >`;
+        data.sources.forEach(src => {
+          const meta = src.metadata || {};
+          html += `
+              <li class="mb-2">
+        <div><span class="font-medium">Name:</span> ${meta.sourceName || "-"}</div>
+        <div><span class="font-medium">Typ:</span> ${meta.sourceType || "-"}</div>
+        <div><span class="font-medium">Identifier:</span> ${meta.sourceIdentifier || "-"}</div>
+        <div><span class="font-medium">URL:</span> <a href="${meta.sourceUrl}" target="_blank" class="text-blue-600 underline">${meta.sourceUrl || "-"}</a></div>
+      <div><span class="font-medium">Quelle-Datum:</span> ${formatDateTime(meta.sourceDateTime)}</div>
+      <div><span class="font-medium">Gesichtet am:</span> ${formatDateTime(meta.discoveryDateTime)}</div>
+        <div><span class="font-medium">Distanz:</span> ${meta.distance !== undefined ? meta.distance : "-"}</div>
+      </li>`;
+        });
+        html += `</ul>`;
+      }
+
+      answerBox.innerHTML = html;
+
+
+
+      } catch (error) {
+        answerBox.textContent = "Error: " + error.message;
+      }
+    });
+  </script>
+</body>
+</html>

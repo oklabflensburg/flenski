@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -31,15 +29,13 @@ public class ChatController {
     @Value("classpath:/promptTemplates/systemPromptTemplate.st")
     Resource systemPromptTemplate;
 
-    private final Logger log = LoggerFactory.getLogger(ChatController.class);
-
     public ChatController(ChatClient chatClient, VectorStore vectorStore) {
         this.chatClient = chatClient;
         this.vectorStore = vectorStore;
     }
 
     @GetMapping("/chat")
-    public ResponseEntity<Map<String, Object>>chat(@RequestParam("message") String message) {
+    public ResponseEntity<Map<String, Object>> chat(@RequestParam("message") String message) {
 
         SearchRequest searchRequest
                 = SearchRequest.builder()
@@ -61,18 +57,16 @@ public class ChatController {
             sources += "gesichtet am: " + doc.getMetadata().get("indexingDate") + "\n\n";
         }
 
-        log.debug("Request:" + message);
 
         String answer = chatClient.prompt()
                 .system(promptTemplateSpec -> promptTemplateSpec
                 .text(systemPromptTemplate)
-                .param("documents", documentContext))
+                .param("documents", documentContext)
+                )
                 .user(message)
                 .call()
                 .content();
 
-
-        log.debug("Answer: " + answer);
 
         Map<String, Object> response = new HashMap<>();
         response.put("answer", answer);

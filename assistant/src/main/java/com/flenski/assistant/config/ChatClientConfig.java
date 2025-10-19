@@ -1,13 +1,14 @@
 package com.flenski.assistant.config;
 
-import org.springframework.ai.chat.prompt.ChatOptions;
+import java.util.List;
+
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
-import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQueryTransformer;
-import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
-import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.flenski.assistant.advisors.TokenUsageAuditAdvisor;
 
 @Configuration
 public class ChatClientConfig {
@@ -22,7 +23,12 @@ public class ChatClientConfig {
                 .build();
 
         return chatClientBuilder
-            .defaultOptions(chatOptions)
-            .build();
+                .defaultAdvisors(List.of(
+                        new SimpleLoggerAdvisor(),
+                        new TokenUsageAuditAdvisor()
+                )
+                )
+                .defaultOptions(chatOptions)
+                .build();
     }
 }
