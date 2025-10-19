@@ -13,8 +13,10 @@ import com.flenski.assistant.advisors.TokenUsageAuditAdvisor;
 @Configuration
 public class ChatClientConfig {
 
-    @Bean
-    public ChatClient chatClient(ChatClient.Builder chatClientBuilder) {
+    @Bean("chatClient")
+    public ChatClient chatClient(
+            ChatClient.Builder chatClientBuilder
+    ) {
 
         ChatOptions chatOptions = ChatOptions.builder()
                 .model("gpt-3.5-turbo")

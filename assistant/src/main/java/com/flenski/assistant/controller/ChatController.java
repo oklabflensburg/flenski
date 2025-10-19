@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.flenski.assistant.dto.ChatResponse;
 import com.flenski.assistant.dto.SourceInfo;
+import com.flenski.assistant.queryTransformers.TranslationTransformer;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:9001")
@@ -28,20 +29,27 @@ public class ChatController {
 
     private final VectorStore vectorStore;
 
+    private final TranslationTransformer translationTransformer;
+
     @Value("classpath:/promptTemplates/systemPromptTemplate.st")
     Resource systemPromptTemplate;
 
-    public ChatController(ChatClient chatClient, VectorStore vectorStore) {
+    public ChatController(
+        ChatClient chatClient, 
+        VectorStore vectorStore, 
+        TranslationTransformer translationTransformer) {
         this.chatClient = chatClient;
         this.vectorStore = vectorStore;
+        this.translationTransformer = translationTransformer;
     }
 
     @GetMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@RequestParam("message") String message) {
 
-        SearchRequest searchRequest
-                = SearchRequest.builder()
-                        .query(message)
+        String translatedQuery = translationTransformer.transform(message);      
+
+        SearchRequest searchRequest = SearchRequest.builder()
+                        .query(translatedQuery)
                         .topK(5)
                         .similarityThreshold(0.5)
                         .build();
@@ -80,7 +88,7 @@ public class ChatController {
                 .user(message)
                 .call()
                 .content();
-
+         
         ChatResponse response = new ChatResponse(answer, sourceInfos);
         return ResponseEntity.ok(response);
     }
