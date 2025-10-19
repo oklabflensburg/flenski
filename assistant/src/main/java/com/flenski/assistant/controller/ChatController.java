@@ -1,8 +1,7 @@
 package com.flenski.assistant.controller;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
@@ -16,6 +15,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.flenski.assistant.dto.ChatResponse;
+import com.flenski.assistant.dto.SourceInfo;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:9001")
@@ -35,7 +37,7 @@ public class ChatController {
     }
 
     @GetMapping("/chat")
-    public ResponseEntity<Map<String, Object>> chat(@RequestParam("message") String message) {
+    public ResponseEntity<ChatResponse> chat(@RequestParam("message") String message) {
 
         SearchRequest searchRequest
                 = SearchRequest.builder()
@@ -47,16 +49,28 @@ public class ChatController {
         List<Document> similarDocs = vectorStore.similaritySearch(searchRequest);
 
         StringBuilder documentContext = new StringBuilder();
-        String sources = "";
-
-        for (Document doc : similarDocs) {
+    List<SourceInfo> sourceInfos = similarDocs
+        .stream()
+        .map(doc -> {
             documentContext.append(doc.getText()).append(System.lineSeparator());
-            sources += "Dokument: " + doc.getMetadata().get("identifier") + "\n";
-            sources += "Datum: " + doc.getMetadata().get("date") + "\n";
-            sources += "URL: " + doc.getMetadata().get("url") + "\n";
-            sources += "gesichtet am: " + doc.getMetadata().get("indexingDate") + "\n\n";
-        }
-
+            String url = String.valueOf(doc.getMetadata().getOrDefault("sourceUrl", ""));
+            String identifier = String.valueOf(doc.getMetadata().getOrDefault("sourceIdentifier", ""));
+            String type = String.valueOf(doc.getMetadata().getOrDefault("sourceType", ""));
+            String name = String.valueOf(doc.getMetadata().getOrDefault("sourceName", ""));
+            String date = String.valueOf(doc.getMetadata().getOrDefault("sourceDate", ""));
+            String discoveryDateTime = String.valueOf(doc.getMetadata().getOrDefault("discoveryDateTime", ""));
+            String distance = String.valueOf(doc.getMetadata().getOrDefault("distance", ""));                    
+            String hash = String.valueOf(doc.getMetadata().getOrDefault("hash", ""));
+            return new SourceInfo(url, identifier, type, name, date, discoveryDateTime, distance, hash);
+        })
+        .collect(Collectors.toMap(
+            SourceInfo::getIdentifier,
+            s -> s,
+            (existing, replacement) -> existing
+        ))
+        .values()
+        .stream()
+        .collect(Collectors.toList());
 
         String answer = chatClient.prompt()
                 .system(promptTemplateSpec -> promptTemplateSpec
@@ -67,10 +81,7 @@ public class ChatController {
                 .call()
                 .content();
 
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("answer", answer);
-        response.put("sources", similarDocs);
+        ChatResponse response = new ChatResponse(answer, sourceInfos);
         return ResponseEntity.ok(response);
     }
 }
