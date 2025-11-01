@@ -15,10 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.flenski.dto.QueueResult;
 import com.flenski.dto.Record;
+import com.flenski.dto.SourceType;
 import com.flenski.entity.QueueItem;
 import com.flenski.service.IndexerService;
 import com.flenski.service.PdfConverterService;
 import com.flenski.service.QueueService;
+import com.flenski.service.SparseVectorService;
 
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.grpc.Collections.Distance;
@@ -33,12 +35,21 @@ public class IndexController {
     private final PdfConverterService pdfConverterService;
     private final QueueService queueService;
     private final QdrantClient qdrantClient;
+    private final SparseVectorService sparseVectorService;
 
-    public IndexController(IndexerService indexerService, PdfConverterService pdfConverterService, QueueService queueService, QdrantClient qdrantClient) {
+    public IndexController(
+            IndexerService indexerService,
+            PdfConverterService pdfConverterService,
+            QueueService queueService,
+            QdrantClient qdrantClient,
+            SparseVectorService sparseVectorService
+    ) {
+
         this.indexerService = indexerService;
         this.pdfConverterService = pdfConverterService;
         this.queueService = queueService;
         this.qdrantClient = qdrantClient;
+        this.sparseVectorService = sparseVectorService;
     }
 
     @PostMapping(value = "/queue", consumes = "application/json")
@@ -57,8 +68,8 @@ public class IndexController {
         return ResponseEntity.ok("No records received for queuing");
     }
 
-    @GetMapping(value = "/index1")
-    public ResponseEntity<String> index1() {
+    @GetMapping(value = "/index")
+    public ResponseEntity<String> index() {
         logger.info("Received GET request to /api/index");
 
         List<QueueItem> queueItems = queueService.getNext(10);
@@ -68,9 +79,15 @@ public class IndexController {
                 QueueItem queueItem = queueItems.get(i);
                 Record record = queueItem.getRecord();
                 try {
-                    Record convertedRecord = pdfConverterService.index(record.getSourceUrl());
-                    indexerService.index(convertedRecord);
-                    queueService.delete(queueItem);
+                    if (record.getSourceType() == SourceType.PDF) {
+                        logger.info("Converting PDF record: {}", record.getSourceUrl());
+                        Record convertedRecord = pdfConverterService.index(record.getSourceUrl());
+                        indexerService.index(convertedRecord);
+                    } else {
+                        indexerService.index(record);
+                    }
+                    
+                  //  queueService.delete(queueItem);
 
                 } catch (Exception e) {
                     logger.error("Error processing record: {}", record.getSourceUrl(), e);
@@ -80,6 +97,31 @@ public class IndexController {
 
         String response = "Indexing completed";
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/createSparseVector")
+    public ResponseEntity<String> sparse() {
+        List<QueueItem> queueItems = queueService.getNext(10);
+
+        if (!queueItems.isEmpty()) {
+            for (int i = 0; i < queueItems.size(); i++) {
+                QueueItem queueItem = queueItems.get(i);
+                Record record = queueItem.getRecord();
+                try {
+                    SparseVectorService.SparseVector vector = sparseVectorService.vectorizeTF(
+                            record.getContent(), 1.2, 0.75, 100.0);
+
+                    String vectorString = java.util.Arrays.toString(vector.values());
+                    logger.info("Vectorized record ID {}: Vector values as string: {}", record.createHash(), vectorString);
+                    
+                    /*queueService.delete(queueItem);*/
+
+                } catch (Exception e) {
+                    logger.error("Error processing record: {}", record.getSourceUrl(), e);
+                }
+            }
+        }
+        return ResponseEntity.ok("Sparse vectors created");
     }
 
     @PutMapping(value = "/collection/{name}")
