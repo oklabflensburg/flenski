@@ -33,7 +33,7 @@
             },
             "sourceType": {
                 "type": "string",
-                "enum": ["PDF", "Website"],
+                "enum": ["PDF", "WEBSITE", "TEXT"],
                 "description": "Type of the source."
             },
             "content": {
