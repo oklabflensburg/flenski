@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.flenski.dto.QueueResult;
@@ -86,9 +87,8 @@ public class IndexController {
                     } else {
                         indexerService.index(record);
                     }
-                    
-                  //  queueService.delete(queueItem);
 
+                    //  queueService.delete(queueItem);
                 } catch (Exception e) {
                     logger.error("Error processing record: {}", record.getSourceUrl(), e);
                 }
@@ -99,9 +99,24 @@ public class IndexController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping(value = "/sparse-vector")
+    public ResponseEntity<String> getSparseVector(@RequestParam("q") String query) {
+        logger.info("Received GET request to /api/sparseVector with query: {}", query);
+        SparseVectorService.SparseVector vector = sparseVectorService.vectorizeTF(query, 1.2, 0.75, 100.0);
+
+        String indicesString = java.util.Arrays.toString(vector.indices());
+        String valuesString = java.util.Arrays.toString(vector.values());
+        String json = String.format("{\n  \"indices\": %s,\n  \"values\": %s\n}", indicesString, valuesString);
+        logger.info(json);
+
+        return ResponseEntity.ok(json);
+    }
+
     @GetMapping(value = "/createSparseVector")
     public ResponseEntity<String> sparse() {
         List<QueueItem> queueItems = queueService.getNext(10);
+
+        String response = "";
 
         if (!queueItems.isEmpty()) {
             for (int i = 0; i < queueItems.size(); i++) {
@@ -111,17 +126,20 @@ public class IndexController {
                     SparseVectorService.SparseVector vector = sparseVectorService.vectorizeTF(
                             record.getContent(), 1.2, 0.75, 100.0);
 
-                    String vectorString = java.util.Arrays.toString(vector.values());
-                    logger.info("Vectorized record ID {}: Vector values as string: {}", record.createHash(), vectorString);
-                    
-                    /*queueService.delete(queueItem);*/
+                    String indicesString = java.util.Arrays.toString(vector.indices());
+                    String valuesString = java.util.Arrays.toString(vector.values());
+                    String json = String.format("{\n  \"indices\": %s,\n  \"values\": %s\n}", indicesString, valuesString);
+                    logger.info("Created sparse vector for record: {}", record.getSourceUrl());
+                    logger.info(json);
+                    response += json + "\n";
 
+                    /*queueService.delete(queueItem);*/
                 } catch (Exception e) {
                     logger.error("Error processing record: {}", record.getSourceUrl(), e);
                 }
             }
         }
-        return ResponseEntity.ok("Sparse vectors created");
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping(value = "/collection/{name}")
