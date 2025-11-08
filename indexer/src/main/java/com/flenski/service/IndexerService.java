@@ -3,13 +3,13 @@ package com.flenski.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -17,6 +17,8 @@ import org.springframework.util.StringUtils;
 import com.flenski.dto.IndexResult;
 import com.flenski.dto.Record;
 import com.flenski.repository.QueueItemRepository;
+
+import io.qdrant.client.QdrantClient;
 
 @Service
 public class IndexerService {
@@ -40,22 +42,9 @@ public class IndexerService {
             return new IndexResult(records.size(), 0, 0, 0);
         }
 
-        TokenTextSplitter textSplitter = TokenTextSplitter
-            .builder()
-            .withChunkSize(200)
-            .withMaxNumChunks(400)
-            .build();
+//        vectorStore.add(splitDocuments);
 
-        List<Document> splitDocuments = records.stream()
-                .filter(record -> StringUtils.hasText(record.getContent()))
-                .map(this::mapRecordToDocument)
-                .flatMap(document -> textSplitter.split(document).stream())
-                .collect(Collectors.toList());
-
-        vectorStore.add(splitDocuments);
-        logger.info("Successfully indexed {} documents", splitDocuments.size());
-
-        return new IndexResult(records.size(), 0, 0, splitDocuments.size());
+        return new IndexResult(records.size(), 0, 0, 0);
     }
     
     private Document mapRecordToDocument(Record record) {

@@ -43,7 +43,7 @@ public class SparseVectorService {
      * @param avgDocLen
      * @return
      */
-    public SparseVector vectorizeTF(String text, double k1, double b, double avgDocLen) {
+    public SparseVector vectorize(String text, double k1, double b, double avgDocLen) {
 
         List<String> tokens = buildTokenList(text);
         vocabularyService.ensureVocabularyFor(tokens);

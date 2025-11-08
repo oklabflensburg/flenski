@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.document.Document;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,8 @@ import com.flenski.dto.QueueResult;
 import com.flenski.dto.Record;
 import com.flenski.dto.SourceType;
 import com.flenski.entity.QueueItem;
+import com.flenski.service.DenseVectorService;
+import com.flenski.service.DocumentBuilderService;
 import com.flenski.service.IndexerService;
 import com.flenski.service.PdfConverterService;
 import com.flenski.service.QueueService;
@@ -37,13 +40,17 @@ public class IndexController {
     private final QueueService queueService;
     private final QdrantClient qdrantClient;
     private final SparseVectorService sparseVectorService;
+    private final DenseVectorService denseVectorService;
+    private final DocumentBuilderService documentBuilderService;
 
     public IndexController(
             IndexerService indexerService,
             PdfConverterService pdfConverterService,
             QueueService queueService,
             QdrantClient qdrantClient,
-            SparseVectorService sparseVectorService
+            SparseVectorService sparseVectorService,
+            DenseVectorService denseVectorService,
+            DocumentBuilderService documentBuilderService
     ) {
 
         this.indexerService = indexerService;
@@ -51,7 +58,10 @@ public class IndexController {
         this.queueService = queueService;
         this.qdrantClient = qdrantClient;
         this.sparseVectorService = sparseVectorService;
+        this.denseVectorService = denseVectorService;
+        this.documentBuilderService = documentBuilderService;
     }
+
 
     @PostMapping(value = "/queue", consumes = "application/json")
     public ResponseEntity<String> queue(@RequestBody List<Record> records) {
@@ -67,6 +77,18 @@ public class IndexController {
         }
 
         return ResponseEntity.ok("No records received for queuing");
+    }
+
+    @GetMapping(value="/point")
+    public ResponseEntity<String> point() 
+    {
+        List<QueueItem> queueItems = queueService.getNext(1);
+        Record record = queueItems.get(0).getRecord();
+        List<Document> documents = documentBuilderService.toChunkDocuments(record);
+        float[] denseEmbedding = denseVectorService.embed(documents.get(0));
+        SparseVectorService.SparseVector vector = sparseVectorService.vectorize(documents.get(0).getText(), 1.2, 0.75, 100.0);
+
+        return ResponseEntity.ok("ok");
     }
 
     @GetMapping(value = "/index")
@@ -102,7 +124,7 @@ public class IndexController {
     @GetMapping(value = "/sparse-vector")
     public ResponseEntity<String> getSparseVector(@RequestParam("q") String query) {
         logger.info("Received GET request to /api/sparseVector with query: {}", query);
-        SparseVectorService.SparseVector vector = sparseVectorService.vectorizeTF(query, 1.2, 0.75, 100.0);
+        SparseVectorService.SparseVector vector = sparseVectorService.vectorize(query, 1.2, 0.75, 100.0);
 
         String indicesString = java.util.Arrays.toString(vector.indices());
         String valuesString = java.util.Arrays.toString(vector.values());
