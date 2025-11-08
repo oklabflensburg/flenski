@@ -35,9 +35,9 @@ public class ChatController {
     Resource systemPromptTemplate;
 
     public ChatController(
-        ChatClient chatClient, 
-        VectorStore vectorStore, 
-        TranslationTransformer translationTransformer) {
+            ChatClient chatClient,
+            VectorStore vectorStore,
+            TranslationTransformer translationTransformer) {
         this.chatClient = chatClient;
         this.vectorStore = vectorStore;
         this.translationTransformer = translationTransformer;
@@ -46,39 +46,39 @@ public class ChatController {
     @GetMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@RequestParam("message") String message) {
 
-        String translatedQuery = translationTransformer.transform(message);      
+        String translatedQuery = translationTransformer.transform(message);
 
         SearchRequest searchRequest = SearchRequest.builder()
-                        .query(translatedQuery)
-                        .topK(5)
-                        .similarityThreshold(0.5)
-                        .build();
+                .query(translatedQuery)
+                .topK(5)
+                .similarityThreshold(0.5)
+                .build();
 
         List<Document> similarDocs = vectorStore.similaritySearch(searchRequest);
 
         StringBuilder documentContext = new StringBuilder();
-    List<SourceInfo> sourceInfos = similarDocs
-        .stream()
-        .map(doc -> {
-            documentContext.append(doc.getText()).append(System.lineSeparator());
-            String url = String.valueOf(doc.getMetadata().getOrDefault("sourceUrl", ""));
-            String identifier = String.valueOf(doc.getMetadata().getOrDefault("sourceIdentifier", ""));
-            String type = String.valueOf(doc.getMetadata().getOrDefault("sourceType", ""));
-            String name = String.valueOf(doc.getMetadata().getOrDefault("sourceName", ""));
-            String date = String.valueOf(doc.getMetadata().getOrDefault("sourceDate", ""));
-            String discoveryDateTime = String.valueOf(doc.getMetadata().getOrDefault("discoveryDateTime", ""));
-            String distance = String.valueOf(doc.getMetadata().getOrDefault("distance", ""));                    
-            String hash = String.valueOf(doc.getMetadata().getOrDefault("hash", ""));
-            return new SourceInfo(url, identifier, type, name, date, discoveryDateTime, distance, hash);
-        })
-        .collect(Collectors.toMap(
-            SourceInfo::getIdentifier,
-            s -> s,
-            (existing, replacement) -> existing
-        ))
-        .values()
-        .stream()
-        .collect(Collectors.toList());
+        List<SourceInfo> sourceInfos = similarDocs
+                .stream()
+                .map(doc -> {
+                    documentContext.append(doc.getText()).append(System.lineSeparator());
+                    String url = String.valueOf(doc.getMetadata().getOrDefault("sourceUrl", ""));
+                    String identifier = String.valueOf(doc.getMetadata().getOrDefault("sourceIdentifier", ""));
+                    String type = String.valueOf(doc.getMetadata().getOrDefault("sourceType", ""));
+                    String name = String.valueOf(doc.getMetadata().getOrDefault("sourceName", ""));
+                    String date = String.valueOf(doc.getMetadata().getOrDefault("sourceDate", ""));
+                    String discoveryDateTime = String.valueOf(doc.getMetadata().getOrDefault("discoveryDateTime", ""));
+                    String distance = String.valueOf(doc.getMetadata().getOrDefault("distance", ""));
+                    String hash = String.valueOf(doc.getMetadata().getOrDefault("hash", ""));
+                    return new SourceInfo(url, identifier, type, name, date, discoveryDateTime, distance, hash);
+                })
+                .collect(Collectors.toMap(
+                        SourceInfo::getIdentifier,
+                        s -> s,
+                        (existing, replacement) -> existing
+                ))
+                .values()
+                .stream()
+                .collect(Collectors.toList());
 
         String answer = chatClient.prompt()
                 .system(promptTemplateSpec -> promptTemplateSpec
@@ -88,7 +88,7 @@ public class ChatController {
                 .user(message)
                 .call()
                 .content();
-         
+
         ChatResponse response = new ChatResponse(answer, sourceInfos);
         return ResponseEntity.ok(response);
     }
