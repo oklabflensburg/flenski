@@ -7,14 +7,17 @@ import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.flenski.dto.Vector;
+
 @Service
 public class DenseVectorService {
 
     @Autowired
     private EmbeddingModel embeddingModel;
     
-    public float[] embed(Document document) {
+    public Vector embed(Document document) {
 
-        return embeddingModel.embed(document);
+        float[] embedding =  embeddingModel.embed(document);
+        return new Vector(embedding);
     }
 }

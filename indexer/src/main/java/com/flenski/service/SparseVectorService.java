@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flenski.dto.Vector;
 
 @Service
 public class SparseVectorService {
@@ -43,7 +44,7 @@ public class SparseVectorService {
      * @param avgDocLen
      * @return
      */
-    public SparseVector vectorize(String text, double k1, double b, double avgDocLen) {
+    public Vector vectorize(String text, double k1, double b, double avgDocLen) {
 
         List<String> tokens = buildTokenList(text);
         vocabularyService.ensureVocabularyFor(tokens);
@@ -55,8 +56,8 @@ public class SparseVectorService {
             tf.merge(t, 1, Integer::sum);
         }
 
-    List<Integer> indicesList = new ArrayList<>();
-    List<Float> valuesList = new ArrayList<>();
+        List<Integer> indicesList = new ArrayList<>();
+        List<Float> valuesList = new ArrayList<>();
 
         for (Map.Entry<String, Integer> entry : tf.entrySet()) {
             Integer dimension = vocabularyService.getVocabulary().get(entry.getKey());
@@ -72,21 +73,21 @@ public class SparseVectorService {
             }
         }
 
-    List<Integer> order = IntStream.range(0, indicesList.size())
-        .boxed()
-        .sorted(Comparator.comparingInt(indicesList::get))
-        .toList();
+        List<Integer> order = IntStream.range(0, indicesList.size())
+                .boxed()
+                .sorted(Comparator.comparingInt(indicesList::get))
+                .toList();
 
-    int n = order.size();
-    int[] indices = new int[n];
-    float[] values = new float[n];
-    for (int k = 0; k < n; k++) {
-        int j = order.get(k);
-        indices[k] = indicesList.get(j);
-        values[k] = valuesList.get(j);
-    }
+        int n = order.size();
+        int[] indices = new int[n];
+        float[] values = new float[n];
+        for (int k = 0; k < n; k++) {
+            int j = order.get(k);
+            indices[k] = indicesList.get(j);
+            values[k] = valuesList.get(j);
+        }
 
-        return new SparseVector(indices, values);
+        return new Vector(values, indices);
     }
 
     private List<String> buildTokenList(String text) {
@@ -104,7 +105,4 @@ public class SparseVectorService {
         return tokens;
     }
 
-    public record SparseVector(int[] indices, float[] values) {
-
-    }
 }
