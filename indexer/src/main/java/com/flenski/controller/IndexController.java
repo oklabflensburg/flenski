@@ -1,5 +1,9 @@
 package com.flenski.controller;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -7,17 +11,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.flenski.dto.Point;
 import com.flenski.dto.QueueResult;
 import com.flenski.dto.Record;
 import com.flenski.dto.SourceType;
+import com.flenski.dto.Vector;
+import com.flenski.dto.IndexRequest;
 import com.flenski.entity.QueueItem;
 import com.flenski.service.DenseVectorService;
 import com.flenski.service.DocumentBuilderService;
@@ -25,10 +30,6 @@ import com.flenski.service.IndexerService;
 import com.flenski.service.PdfConverterService;
 import com.flenski.service.QueueService;
 import com.flenski.service.SparseVectorService;
-
-import io.qdrant.client.QdrantClient;
-import io.qdrant.client.grpc.Collections.Distance;
-import io.qdrant.client.grpc.Collections.VectorParams;
 
 @RestController
 @RequestMapping("/api")
@@ -38,7 +39,6 @@ public class IndexController {
     private final IndexerService indexerService;
     private final PdfConverterService pdfConverterService;
     private final QueueService queueService;
-    private final QdrantClient qdrantClient;
     private final SparseVectorService sparseVectorService;
     private final DenseVectorService denseVectorService;
     private final DocumentBuilderService documentBuilderService;
@@ -47,7 +47,6 @@ public class IndexController {
             IndexerService indexerService,
             PdfConverterService pdfConverterService,
             QueueService queueService,
-            QdrantClient qdrantClient,
             SparseVectorService sparseVectorService,
             DenseVectorService denseVectorService,
             DocumentBuilderService documentBuilderService
@@ -56,12 +55,10 @@ public class IndexController {
         this.indexerService = indexerService;
         this.pdfConverterService = pdfConverterService;
         this.queueService = queueService;
-        this.qdrantClient = qdrantClient;
         this.sparseVectorService = sparseVectorService;
         this.denseVectorService = denseVectorService;
         this.documentBuilderService = documentBuilderService;
     }
-
 
     @PostMapping(value = "/queue", consumes = "application/json")
     public ResponseEntity<String> queue(@RequestBody List<Record> records) {
@@ -79,14 +76,39 @@ public class IndexController {
         return ResponseEntity.ok("No records received for queuing");
     }
 
-    @GetMapping(value="/point")
-    public ResponseEntity<String> point() 
-    {
+    @GetMapping(value = "/point")
+    public ResponseEntity<String> point() {
         List<QueueItem> queueItems = queueService.getNext(1);
+        if (queueItems.isEmpty()) {
+            return ResponseEntity.status(404).body("No queue items available");
+        }
         Record record = queueItems.get(0).getRecord();
         List<Document> documents = documentBuilderService.toChunkDocuments(record);
-        float[] denseEmbedding = denseVectorService.embed(documents.get(0));
-        SparseVectorService.SparseVector vector = sparseVectorService.vectorize(documents.get(0).getText(), 1.2, 0.75, 100.0);
+        Document doc = documents.get(0);
+        Vector denseVector = denseVectorService.embed(doc);
+        denseVector.setName("dense");
+        
+        Vector sparseVector = sparseVectorService.vectorize(doc.getText(), 1.2, 0.75, 100.0);
+        sparseVector.setName("sparse");
+    
+        Point point = new Point();
+        point.setId(1);
+        point.addVector(sparseVector);
+        point.addVector(denseVector);
+        IndexRequest indexRequest = new IndexRequest();
+        indexRequest.addPoint(point);
+        HttpRequest request = indexRequest.build();
+
+        HttpClient client = HttpClient.newHttpClient();
+
+        try {
+            String requestBody = indexRequest.toJson();
+            logger.info("Sending request with body: {}", requestBody);
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            logger.info("Qdrant response: {}", response.body());
+        } catch (Exception e) {
+            logger.error("Error sending request to Qdrant: {}", e.getMessage(), e);
+        }
 
         return ResponseEntity.ok("ok");
     }
@@ -145,7 +167,7 @@ public class IndexController {
                 QueueItem queueItem = queueItems.get(i);
                 Record record = queueItem.getRecord();
                 try {
-                    SparseVectorService.SparseVector vector = sparseVectorService.vectorizeTF(
+                    SparseVectorService.SparseVector vector = sparseVectorService.vectorize(
                             record.getContent(), 1.2, 0.75, 100.0);
 
                     String indicesString = java.util.Arrays.toString(vector.indices());
@@ -161,25 +183,6 @@ public class IndexController {
                 }
             }
         }
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping(value = "/collection/{name}")
-    public ResponseEntity<String> hybrid(@PathVariable("name") String collectionName) {
-        logger.info("Received PUT request to /api/collection/{}", collectionName);
-
-        try {
-            this.qdrantClient.createCollectionAsync(collectionName,
-                    VectorParams.newBuilder()
-                            .setDistance(Distance.Cosine)
-                            .setSize(4)
-                            .build())
-                    .get();
-        } catch (Exception e) {
-            logger.error("Error creating collection: {}", e.getMessage(), e);
-        }
-
-        String response = String.format("Collection '%s' created", collectionName);
         return ResponseEntity.ok(response);
     }
 }
