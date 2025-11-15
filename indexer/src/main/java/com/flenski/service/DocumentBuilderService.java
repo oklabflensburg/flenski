@@ -9,6 +9,7 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.stereotype.Service;
+
 import com.flenski.dto.Record;
 
 @Service
@@ -19,8 +20,8 @@ public class DocumentBuilderService {
     DocumentBuilderService() {
         this.textSplitter = TokenTextSplitter
                 .builder()
-                .withChunkSize(200)
-                .withMaxNumChunks(400)
+                .withChunkSize(150)
+                .withMaxNumChunks(300)
                 .build();
     }
 
