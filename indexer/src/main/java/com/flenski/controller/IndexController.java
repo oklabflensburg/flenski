@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.flenski.dto.HybridFusionSearchRequest;
 import com.flenski.dto.IndexRequest;
 import com.flenski.dto.Point;
 import com.flenski.dto.QueueResult;
@@ -40,6 +42,8 @@ public class IndexController {
     private final SparseVectorService sparseVectorService;
     private final DenseVectorService denseVectorService;
     private final DocumentBuilderService documentBuilderService;
+    private final HybridFusionSearchRequest hybridFusionSearchRequest;
+    private final HttpClient httpClient;
 
     public IndexController(
             IndexerService indexerService,
@@ -47,7 +51,8 @@ public class IndexController {
             QueueService queueService,
             SparseVectorService sparseVectorService,
             DenseVectorService denseVectorService,
-            DocumentBuilderService documentBuilderService
+            DocumentBuilderService documentBuilderService,
+            HybridFusionSearchRequest hybridFusionSearchRequest
     ) {
         this.indexerService = indexerService;
         this.pdfConverterService = pdfConverterService;
@@ -55,6 +60,8 @@ public class IndexController {
         this.sparseVectorService = sparseVectorService;
         this.denseVectorService = denseVectorService;
         this.documentBuilderService = documentBuilderService;
+        this.hybridFusionSearchRequest = hybridFusionSearchRequest;
+        this.httpClient = HttpClient.newHttpClient();
     }
 
     @PostMapping(value = "/queue", consumes = "application/json")
@@ -92,22 +99,24 @@ public class IndexController {
                         Vector denseVector = denseVectorService.embed(doc);
                         denseVector.setName("dense");
 
-                        Vector sparseVector = sparseVectorService.vectorize(doc.getText(), 1.2, 0.75, 100.0);
+                        Vector sparseVector = sparseVectorService.embed(doc.getText());
                         sparseVector.setName("sparse");
 
                         Point point = new Point();
                         point.setId(id);
                         point.addVector(sparseVector);
                         point.addVector(denseVector);
+                        point.addToPayload("source_url", record.getSourceUrl());
+                        point.addToPayload("content", doc.getText());
+                        point.addToPayload("source_identifier", record.getSourceIdentifier());
+                        point.addToPayload("discovery_date_time", record.getDiscoveryDateTime().toString());
+                        point.addToPayload("source_date_time", record.getSourceDateTime().toString());
                         IndexRequest indexRequest = new IndexRequest();
                         indexRequest.addPoint(point);
                         HttpRequest request = indexRequest.build();
 
-                        HttpClient client = HttpClient.newHttpClient();
-
                         logger.info("Sending request for point with id : {}", id);
-                        String requestBody = indexRequest.toJson();
-                        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
                         logger.info("Qdrant response: {}", response.body());
                     } catch (Throwable t) {
                         logger.error("Error sending request to Qdrant: {}", t.getMessage(), t);
@@ -153,5 +162,18 @@ public class IndexController {
 
         String response = "Indexing completed";
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/search")
+    public ResponseEntity<String> search(@RequestParam(name = "q") String q) {
+
+        hybridFusionSearchRequest.setQueryText(q, 10);
+        HttpRequest request = hybridFusionSearchRequest.build();
+        try {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+             return ResponseEntity.ok(response.body());
+        } catch (Throwable e) {
+            throw new RuntimeException("Failed to execute search request", e);
+        }
     }
 }

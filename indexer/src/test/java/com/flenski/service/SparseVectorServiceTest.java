@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import com.flenski.dto.Vector;
+
 class SparseVectorServiceTest {
 
     @Test
@@ -23,11 +25,11 @@ class SparseVectorServiceTest {
 
         SparseVectorService service = new SparseVectorService(new WhitespaceAnalyzer(), vocabularyService);
 
-        SparseVectorService.SparseVector vector = service.vectorizeTF("foo bar foo", 1.2, 0.75, 2.0);
+        Vector vector = service.embed("foo bar foo");
 
         assertNotNull(vector);
-        assertEquals(2, vector.indices().length);
-        assertEquals(2, vector.values().length);
-        assertArrayEquals(new int[]{0, 1}, vector.indices());
+        assertEquals(2, vector.getIndices().length);
+        assertEquals(2, vector.getValues().length);
+        assertArrayEquals(new int[]{0, 1}, vector.getIndices());
     }
 }

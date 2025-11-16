@@ -1,10 +1,13 @@
 package com.flenski.dto;
+import java.util.List;
+import java.util.Map;
 
 public class Point {
     private int id;
-    private java.util.List<Vector> vectors = new java.util.ArrayList<>();
+    private List<Vector> vectors = new java.util.ArrayList<>();
+    private Map<String, Object> payload;
 
-    public java.util.Map<String, Object> toJsonMap() {
+    public Map<String, Object> toJsonMap() {
         var point = new java.util.HashMap<String, Object>();
         point.put("id", id);
         var vectorObj = new java.util.HashMap<String, Object>();
@@ -14,6 +17,7 @@ public class Point {
             }
         }
         point.put("vector", vectorObj);
+        point.put("payload", payload);
         return point;
     }
 
@@ -35,5 +39,12 @@ public class Point {
 
     public void addVector(Vector vector) {
         this.vectors.add(vector);
+    }
+
+    public void addToPayload(String key, Object value) {
+        if (this.payload == null) {
+            this.payload = new java.util.HashMap<>();
+        }
+        this.payload.put(key, value);
     }
 }

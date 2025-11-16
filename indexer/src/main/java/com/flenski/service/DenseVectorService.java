@@ -1,7 +1,5 @@
 package com.flenski.service;
 
-import java.util.List;
-
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +16,12 @@ public class DenseVectorService {
     public Vector embed(Document document) {
 
         float[] embedding =  embeddingModel.embed(document);
+        return new Vector(embedding);
+    }
+
+    public Vector embed(String text) {
+
+        float[] embedding =  embeddingModel.embed(text);
         return new Vector(embedding);
     }
 }

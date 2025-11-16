@@ -21,6 +21,14 @@ import com.flenski.dto.Vector;
 @Service
 public class SparseVectorService {
 
+    private static final double k1 = 1.2;
+    private static final double b = 0.75;
+    /**
+     * TODO: This should be calculated based on the indexed documents
+     */
+    private static final double avgDocLen = 100.0;
+
+
     private static final Logger log = LoggerFactory.getLogger(SparseVectorService.class);
     private final Analyzer analyzer;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -44,7 +52,7 @@ public class SparseVectorService {
      * @param avgDocLen
      * @return
      */
-    public Vector vectorize(String text, double k1, double b, double avgDocLen) {
+    public Vector embed(String text) {
 
         List<String> tokens = buildTokenList(text);
         vocabularyService.ensureVocabularyFor(tokens);
@@ -57,7 +65,7 @@ public class SparseVectorService {
         }
 
         List<Integer> indicesList = new ArrayList<>();
-        List<Float> valuesList = new ArrayList<>();
+        List<Double> valuesList = new ArrayList<>();
 
         for (Map.Entry<String, Integer> entry : tf.entrySet()) {
             Integer dimension = vocabularyService.getVocabulary().get(entry.getKey());
@@ -69,7 +77,7 @@ public class SparseVectorService {
             double normalization = frequency * (k1 + 1.0) / (frequency + k1 * (1.0 - b + b * (dl / Math.max(1.0, avgDocLen))));
             if (normalization != 0.0) {
                 indicesList.add(dimension);
-                valuesList.add((float) normalization);
+                valuesList.add((double) normalization);
             }
         }
 
@@ -80,7 +88,7 @@ public class SparseVectorService {
 
         int n = order.size();
         int[] indices = new int[n];
-        float[] values = new float[n];
+        double[] values = new double[n];
         for (int k = 0; k < n; k++) {
             int j = order.get(k);
             indices[k] = indicesList.get(j);

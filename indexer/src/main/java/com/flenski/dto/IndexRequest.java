@@ -4,6 +4,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.util.ArrayList;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.List;
 
 public class IndexRequest {
 
@@ -17,9 +20,9 @@ public class IndexRequest {
     }
 
     public String toJson() {
-        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-        java.util.HashMap<String, Object> result = new java.util.HashMap<>();
-        java.util.List<Object> pointsList = new java.util.ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+        HashMap<String, Object> result = new HashMap<>();
+        List<Object> pointsList = new ArrayList<>();
         if (points != null) {
             for (Point p : points) {
                 pointsList.add(p.toJsonMap());

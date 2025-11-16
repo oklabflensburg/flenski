@@ -1,5 +1,8 @@
 package com.flenski.assistant.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,18 +21,23 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.flenski.assistant.dto.ChatResponse;
 import com.flenski.assistant.dto.SourceInfo;
+import com.flenski.assistant.queryTransformers.CompressionTransformer;
 import com.flenski.assistant.queryTransformers.TranslationTransformer;
+import com.flenski.assistant.requests.SearchRequestIndexer;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:9001")
 @RequestMapping("/api/")
 public class ChatController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ChatController.class);
+
     private final ChatClient chatClient;
 
     private final VectorStore vectorStore;
 
     private final TranslationTransformer translationTransformer;
+    private final CompressionTransformer compressionTransformer;
 
     @Value("classpath:/promptTemplates/systemPromptTemplate.st")
     Resource systemPromptTemplate;
@@ -37,19 +45,48 @@ public class ChatController {
     public ChatController(
             ChatClient chatClient,
             VectorStore vectorStore,
-            TranslationTransformer translationTransformer) {
+            TranslationTransformer translationTransformer,
+            CompressionTransformer compressionTransformer
+    ) {
         this.chatClient = chatClient;
         this.vectorStore = vectorStore;
         this.translationTransformer = translationTransformer;
+        this.compressionTransformer = compressionTransformer;
+    }
+
+    @GetMapping("/query")
+    public ResponseEntity<String> query(@RequestParam("q") String message) {
+
+        SearchRequestIndexer request = new SearchRequestIndexer();
+        try {
+
+            String compressedMessage = compressionTransformer.transform(message);
+
+            String response = request.search(compressedMessage);
+
+            String answer = chatClient.prompt()
+                    .system(promptTemplateSpec -> promptTemplateSpec
+                    .text(systemPromptTemplate)
+                    .param("documents", response)
+                    )
+                    .user(message)
+                    .call()
+                    .content();
+            return ResponseEntity.ok(answer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ResponseEntity.status(500).body("An error occurred while processing the request.");
     }
 
     @GetMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@RequestParam("message") String message) {
 
         String translatedQuery = translationTransformer.transform(message);
+        String compressedQuery = compressionTransformer.transform(translatedQuery);
 
         SearchRequest searchRequest = SearchRequest.builder()
-                .query(translatedQuery)
+                .query(compressedQuery)
                 .topK(5)
                 .similarityThreshold(0.5)
                 .build();
