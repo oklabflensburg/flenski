@@ -9,45 +9,46 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.stereotype.Service;
-
+import com.flenski.config.IndexingConfig;
+import com.flenski.dto.DocumentDto;
 import com.flenski.dto.Record;
 
 @Service
 public class DocumentBuilderService {
 
-    TextSplitter textSplitter;
-
-    DocumentBuilderService() {
+    private final TextSplitter textSplitter;
+    private final IndexingConfig config;
+    
+    public DocumentBuilderService(IndexingConfig config) {
+        this.config = config;
         this.textSplitter = TokenTextSplitter
                 .builder()
-                .withChunkSize(150)
-                .withMaxNumChunks(300)
+                .withChunkSize(this.config.getChunkSize())
+                .withMaxNumChunks(this.config.getMaxNumnChunks())
                 .build();
     }
 
-    public List<Document> toChunkDocuments(Record record) {
-
-        Document document = mapRecordToDocument(record);
-        return  textSplitter.split(document);
+    public List<Document> toChunkDocuments(DocumentDto documentDto) {
+        Document document = mapDocumentDtoToDocument(documentDto);
+        return textSplitter.split(document);
     }
 
-    
-    public Document mapRecordToDocument(Record record) {
+    public Document mapDocumentDtoToDocument(DocumentDto documentDto) {
         Map<String, Object> metadata = new HashMap<>();
-        metadata.put("sourceIdentifier", record.getSourceIdentifier());
-        metadata.put("sourceName", record.getSourceName());
-        metadata.put("sourceUrl", record.getSourceUrl());
-        metadata.put("sourceType", record.getSourceType().toString());
-        metadata.put("hash", record.createHash());
-        
-        if (record.getSourceDateTime() != null) {
-            metadata.put("sourceDateTime", record.getSourceDateTime().toString());
+        metadata.put("sourceIdentifier", documentDto.getSourceIdentifier());
+        metadata.put("sourceName", documentDto.getSourceName());
+        metadata.put("sourceUrl", documentDto.getSourceUrl());
+        metadata.put("sourceType", documentDto.getSourceType().toString());
+        metadata.put("hash", documentDto.createHash());
+
+        if (documentDto.getSourceDateTime() != null) {
+            metadata.put("sourceDateTime", documentDto.getSourceDateTime().toString());
         }
-        
-        if (record.getDiscoveryDateTime() != null) {
-            metadata.put("discoveryDateTime", record.getDiscoveryDateTime().toString());
+
+        if (documentDto.getDiscoveryDateTime() != null) {
+            metadata.put("discoveryDateTime", documentDto.getDiscoveryDateTime().toString());
         }
         String documentId = UUID.randomUUID().toString();
-        return new Document(documentId, record.getContent(), metadata);
+        return new Document(documentId, documentDto.getContent(), metadata);
     }
 }

@@ -2,8 +2,8 @@ package com.flenski.entity;
 
 import java.time.LocalDateTime;
 
-import com.flenski.converter.RecordConverter;
-import com.flenski.dto.Record;
+import com.flenski.converter.DocumentConverter;
+import com.flenski.dto.DocumentDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -28,9 +28,9 @@ public class QueueItem {
     @Column(name = "identifier", nullable = false, updatable = false, unique = true)
     private String identifier;
 
-    @Column(name = "record", columnDefinition = "TEXT", nullable = false, updatable = false)
-    @Convert(converter = RecordConverter.class)
-    private Record record;
+    @Column(name = "document", columnDefinition = "TEXT", nullable = false, updatable = false)
+    @Convert(converter = DocumentConverter.class)
+    private DocumentDto document;
 
     public Long getId() {
         return id;
@@ -56,12 +56,12 @@ public class QueueItem {
         this.identifier = identifier;
     }
 
-    public Record getRecord() {
-        return record;
+    public DocumentDto getDocument() {
+        return document;
     }
 
-    public void setRecord(Record record) {
-        this.record = record;
+    public void setDocument(DocumentDto document) {
+        this.document = document;
     }
 
     @PrePersist

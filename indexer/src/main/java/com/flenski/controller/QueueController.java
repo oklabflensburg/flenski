@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.flenski.dto.DocumentDto;
 import com.flenski.dto.Record;
 import com.flenski.result.QueueResult;
 import com.flenski.service.QueueService;
@@ -26,14 +27,14 @@ public class QueueController {
     }
 
     @PostMapping(value = "/queue", consumes = "application/json")
-    public ResponseEntity<String> add(@RequestBody List<Record> records) {
+    public ResponseEntity<String> add(@RequestBody List<DocumentDto> documents) {
         log.info("Adding item to queue");
 
-        if (records.isEmpty()) {
-            return ResponseEntity.badRequest().body("No records provided");
+        if (documents.isEmpty()) {
+            return ResponseEntity.badRequest().body("No documents provided");
         }
 
-        QueueResult queueResult = queueService.add(records);
+        QueueResult queueResult = queueService.add(documents);
         String response = String.format("Queueing completed - added: %d, duplicates: %d",
                 queueResult.getAdded(), queueResult.getDuplicates());
         log.info(response);

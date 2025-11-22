@@ -13,7 +13,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.flenski.dto.Record;
 import com.flenski.indexer.IndexerApplication;
 import com.flenski.result.QueueResult;
 import com.flenski.service.QueueService;
@@ -27,6 +26,11 @@ class QueueControllerTest {
         @Bean
         public QueueService queueService() {
             return Mockito.mock(QueueService.class);
+        }
+
+        @Bean
+        public com.flenski.repository.QueueItemRepository queueItemRepository() {
+            return Mockito.mock(com.flenski.repository.QueueItemRepository.class);
         }
     }
 
@@ -48,18 +52,19 @@ class QueueControllerTest {
             "\"sourceType\":\"PDF\"," +
             "\"content\":\"test content\"}]";
 
-        Record record = new Record();
-        record.setSourceIdentifier("id1");
-        record.setSourceName("name");
-        record.setSourceUrl("http://example.com");
-        record.setSourceDateTime(java.time.Instant.parse("2023-01-01T00:00:00Z"));
-        record.setDiscoveryDateTime(java.time.Instant.parse("2023-01-01T00:00:00Z"));
-        record.setSourceType(com.flenski.type.SourceType.PDF);
-        record.setContent("test content");
 
-        java.util.List<Record> records = java.util.List.of(record);
+        com.flenski.dto.DocumentDto documentDto = new com.flenski.dto.DocumentDto();
+        documentDto.setSourceIdentifier("id1");
+        documentDto.setSourceName("name");
+        documentDto.setSourceUrl("http://example.com");
+        documentDto.setSourceDateTime(java.time.Instant.parse("2023-01-01T00:00:00Z"));
+        documentDto.setDiscoveryDateTime(java.time.Instant.parse("2023-01-01T00:00:00Z"));
+        documentDto.setSourceType(com.flenski.type.SourceType.PDF);
+        documentDto.setContent("test content");
+
+        java.util.List<com.flenski.dto.DocumentDto> documentDtos = java.util.List.of(documentDto);
         QueueResult queueResult = new QueueResult(1, 0);
-        Mockito.when(queueService.add(records)).thenReturn(queueResult);
+        Mockito.when(queueService.add(Mockito.anyList())).thenReturn(queueResult);
 
         String expectedResponse = "Queueing completed - added: 1, duplicates: 0";
 
@@ -76,6 +81,6 @@ class QueueControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("[]"))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("No records provided"));
+                .andExpect(content().string("No documents provided"));
     }
 }

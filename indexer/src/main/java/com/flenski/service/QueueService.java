@@ -8,7 +8,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import com.flenski.dto.Record;
+import com.flenski.dto.DocumentDto;
 import com.flenski.entity.QueueItem;
 import com.flenski.repository.QueueItemRepository;
 import com.flenski.result.QueueResult;
@@ -22,18 +22,18 @@ public class QueueService {
         this.queueItemRepository = queueItemRepository;
     }
 
-    public QueueResult add(Record record) {
-        return add(List.of(record));
+    public QueueResult add(DocumentDto documentDto) {
+        return add(List.of(documentDto));
     }
 
-    public QueueResult add(List<Record> records) {
+    public QueueResult add(List<DocumentDto> documents) {
 
         AtomicInteger amountDuplicates = new AtomicInteger(0);
         AtomicInteger amountSaved = new AtomicInteger(0);
 
-        List<Record> filteredRecords = records.stream()
-                .filter(record -> {
-                    if (queueItemRepository.existsByIdentifier(record.getSourceIdentifier())) {
+        List<DocumentDto> filteredDocuments = documents.stream()
+                .filter(documentDto -> {
+                    if (queueItemRepository.existsByIdentifier(documentDto.getSourceIdentifier())) {
                         return false;
                     } else {
                         return true;
@@ -41,12 +41,12 @@ public class QueueService {
                 })
                 .collect(Collectors.toList());
 
-        List<QueueItem> queueItems = filteredRecords.stream()
-                .map(this::mapRecordToQueueItem)
+        List<QueueItem> queueItems = filteredDocuments.stream()
+                .map(this::mapDocumentDtoToQueueItem)
                 .collect(Collectors.toList());
 
-        for (Record record : records) {
-            QueueItem queueItem = mapRecordToQueueItem(record);
+        for (DocumentDto documentDto : documents) {
+            QueueItem queueItem = mapDocumentDtoToQueueItem(documentDto);
             try {
                 queueItemRepository.save(queueItem);
             } catch (DataIntegrityViolationException e) {
@@ -67,10 +67,10 @@ public class QueueService {
         queueItemRepository.delete(queueItem);
     }
 
-    private QueueItem mapRecordToQueueItem(Record record) {
+    private QueueItem mapDocumentDtoToQueueItem(DocumentDto documentDto) {
         QueueItem queueItem = new QueueItem();
-        queueItem.setIdentifier(record.createHash());
-        queueItem.setRecord(record);
+        queueItem.setIdentifier(documentDto.createHash());
+        queueItem.setDocument(documentDto);
         return queueItem;
     }
 }

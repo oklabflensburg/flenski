@@ -17,7 +17,7 @@ import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
-import com.flenski.dto.Record;
+import com.flenski.dto.DocumentDto;
 import com.flenski.type.SourceType;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,15 +35,15 @@ public class PdfConverterService {
                 .build();
     }
 
-    public Record index(String fileUrl) {
+    public DocumentDto index(String fileUrl) {
         try {
             log.info("Starting PDF processing for URL: {}", fileUrl);
             InputStream pdfInputStream = downloadPdf(fileUrl);
             String extractedText = extractTextFromPdf(pdfInputStream);
-            Record record = createRecord(fileUrl, extractedText);
+            DocumentDto documentDto = createDocument(fileUrl, extractedText);
             
             log.info("Successfully processed PDF from URL: {}", fileUrl);
-            return record;
+            return documentDto;
             
         } catch (Exception e) {
             log.error("Error processing PDF from URL: {}", fileUrl, e);
@@ -98,23 +98,23 @@ public class PdfConverterService {
         }
     }
 
-    private Record createRecord(String fileUrl, String extractedText) {
+    private DocumentDto createDocument(String fileUrl, String extractedText) {
         log.debug("Creating record for URL: {}", fileUrl);
         
-        Record record = new Record();
-        record.setSourceIdentifier(generateSourceIdentifier(fileUrl));
-        record.setSourceName(extractFileNameFromUrl(fileUrl));
-        record.setSourceUrl(fileUrl);
+        DocumentDto documentDto = new DocumentDto();
+        documentDto.setSourceIdentifier(generateSourceIdentifier(fileUrl));
+        documentDto.setSourceName(extractFileNameFromUrl(fileUrl));
+        documentDto.setSourceUrl(fileUrl);
 
         //TODO: Replace with date from PDF metadata if available
-        record.setSourceDateTime(Instant.now()); 
+        documentDto.setSourceDateTime(Instant.now()); 
         
-        record.setDiscoveryDateTime(Instant.now());
-        record.setSourceType(SourceType.PDF);
-        record.setContent(extractedText);
+        documentDto.setDiscoveryDateTime(Instant.now());
+        documentDto.setSourceType(SourceType.PDF);
+        documentDto.setContent(extractedText);
         
         log.debug("Created record with {} characters of content", extractedText.length());
-        return record;
+        return documentDto;
     }
 
     private String generateSourceIdentifier(String fileUrl) {

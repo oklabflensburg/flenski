@@ -10,19 +10,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.flenski.dto.DocumentDto;
 import com.flenski.dto.Point;
 import com.flenski.dto.Record;
 import com.flenski.dto.Vector;
 import com.flenski.entity.QueueItem;
 import com.flenski.request.HybridFusionSearchRequest;
 import com.flenski.request.IndexRequest;
-import com.flenski.result.QueueResult;
 import com.flenski.service.DenseVectorService;
 import com.flenski.service.DocumentBuilderService;
 import com.flenski.service.IndexerService;
@@ -71,13 +69,16 @@ public class IndexController {
         int id = 1;
         for (QueueItem item : queueItems) {
             try {
-                logger.info("Queue Item ID: {}, Record Source URL: {}", item.getId(), item.getRecord().getSourceUrl());
+                logger.info("Queue Item ID: {}, Record Source URL: {}", item.getId(), item.getDocument().getSourceUrl());
 
                 if (queueItems.isEmpty()) {
                     return ResponseEntity.status(404).body("No queue items available");
                 }
-                Record record = item.getRecord();
-                List<Document> documents = documentBuilderService.toChunkDocuments(record);
+                DocumentDto documentDto = item.getDocument();
+                indexerService.index(documentDto);
+
+
+                List<Document> documents = documentBuilderService.toChunkDocuments(documentDto);
                 for (Document doc : documents) {
                     try {
                         Vector denseVector = denseVectorService.embed(doc);
@@ -90,11 +91,11 @@ public class IndexController {
                         point.setId(id);
                         point.addVector(sparseVector);
                         point.addVector(denseVector);
-                        point.addToPayload("source_url", record.getSourceUrl());
+                        point.addToPayload("source_url", documentDto.getSourceUrl());
                         point.addToPayload("content", doc.getText());
-                        point.addToPayload("source_identifier", record.getSourceIdentifier());
-                        point.addToPayload("discovery_date_time", record.getDiscoveryDateTime().toString());
-                        point.addToPayload("source_date_time", record.getSourceDateTime().toString());
+                        point.addToPayload("source_identifier", documentDto.getSourceIdentifier());
+                        point.addToPayload("discovery_date_time", documentDto.getDiscoveryDateTime().toString());
+                        point.addToPayload("source_date_time", documentDto.getSourceDateTime().toString());
                         IndexRequest indexRequest = new IndexRequest();
                         indexRequest.addPoint(point);
                         HttpRequest request = indexRequest.build();
@@ -125,18 +126,18 @@ public class IndexController {
             for (int i = 0; i < queueItems.size(); i++) {
                 QueueItem queueItem = queueItems.get(i);
                 try {
-                    Record record = queueItem.getRecord();
+                    DocumentDto documentDto = queueItem.getDocument();
                     try {
-                        if (record.getSourceType() == SourceType.PDF) {
-                            logger.info("Converting PDF record: {}", record.getSourceUrl());
-                            Record convertedRecord = pdfConverterService.index(record.getSourceUrl());
-                            indexerService.index(convertedRecord);
+                        if (documentDto.getSourceType() == SourceType.PDF) {
+                            logger.info("Converting PDF record: {}", documentDto.getSourceUrl());
+                            DocumentDto convertedDocument = pdfConverterService.index(documentDto.getSourceUrl());
+                            indexerService.index(convertedDocument);
                         } else {
-                            indexerService.index(record);
+                            indexerService.index(documentDto);
                         }
                         //  queueService.delete(queueItem);
                     } catch (Throwable t) {
-                        logger.error("Error processing record: {}", record.getSourceUrl(), t);
+                        logger.error("Error processing record: {}", documentDto.getSourceUrl(), t);
                     }
                 } catch (Throwable t) {
                     logger.error("Error processing queue item: {}", queueItem.getId(), t);
