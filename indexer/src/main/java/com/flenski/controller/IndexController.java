@@ -82,7 +82,7 @@ public class IndexController {
 
     @GetMapping(value = "/point")
     public ResponseEntity<String> point() {
-        List<QueueItem> queueItems = queueService.getNext(10);
+        List<QueueItem> queueItems = queueService.getNext(200);
 
         int id = 1;
         for (QueueItem item : queueItems) {
@@ -135,7 +135,7 @@ public class IndexController {
     public ResponseEntity<String> index() {
         logger.info("Received GET request to /api/index");
 
-        List<QueueItem> queueItems = queueService.getNext(10);
+        List<QueueItem> queueItems = queueService.getNext(50);
 
         if (!queueItems.isEmpty()) {
             for (int i = 0; i < queueItems.size(); i++) {

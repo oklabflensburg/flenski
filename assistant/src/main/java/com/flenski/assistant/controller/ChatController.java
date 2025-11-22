@@ -1,17 +1,17 @@
 package com.flenski.assistant.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +24,8 @@ import com.flenski.assistant.dto.SourceInfo;
 import com.flenski.assistant.queryTransformers.CompressionTransformer;
 import com.flenski.assistant.queryTransformers.TranslationTransformer;
 import com.flenski.assistant.requests.SearchRequestIndexer;
+
+import reactor.core.publisher.Flux;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:9001")
@@ -55,28 +57,33 @@ public class ChatController {
     }
 
     @GetMapping("/query")
-    public ResponseEntity<String> query(@RequestParam("q") String message) {
+    public ResponseEntity<ChatResponse> query(@RequestParam("q") String message) {
 
+        logger.info("Received query: {}", message);
         SearchRequestIndexer request = new SearchRequestIndexer();
         try {
-
             String compressedMessage = compressionTransformer.transform(message);
+            List<SourceInfo> sourceInfos = request.search(compressedMessage);
 
-            String response = request.search(compressedMessage);
-
+            String documentsString = sourceInfos.stream()
+                .map(s -> s.getName() + " " + s.getIdentifier() + "\n " + s.getContent())
+                .collect(Collectors.joining("\n"));
+          
             String answer = chatClient.prompt()
-                    .system(promptTemplateSpec -> promptTemplateSpec
-                    .text(systemPromptTemplate)
-                    .param("documents", response)
-                    )
-                    .user(message)
-                    .call()
-                    .content();
-            return ResponseEntity.ok(answer);
+                .system(promptTemplateSpec -> promptTemplateSpec
+                .text(systemPromptTemplate)
+                .param("documents", documentsString)
+                )
+                .user(message)
+                .call()
+                .content();
+
+            ChatResponse response = new ChatResponse(answer, sourceInfos);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error processing query", e);
+            return ResponseEntity.status(500).body(null);
         }
-        return ResponseEntity.status(500).body("An error occurred while processing the request.");
     }
 
     @GetMapping("/chat")
@@ -106,7 +113,8 @@ public class ChatController {
                     String discoveryDateTime = String.valueOf(doc.getMetadata().getOrDefault("discoveryDateTime", ""));
                     String distance = String.valueOf(doc.getMetadata().getOrDefault("distance", ""));
                     String hash = String.valueOf(doc.getMetadata().getOrDefault("hash", ""));
-                    return new SourceInfo(url, identifier, type, name, date, discoveryDateTime, distance, hash);
+                    String content = doc.getText();
+                    return new SourceInfo(url, identifier, type, name, date, discoveryDateTime, distance, hash, content);
                 })
                 .collect(Collectors.toMap(
                         SourceInfo::getIdentifier,
@@ -128,5 +136,10 @@ public class ChatController {
 
         ChatResponse response = new ChatResponse(answer, sourceInfos);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> stream(@RequestParam("message") String message) {
+        return chatClient.prompt().user(message).stream().content();
     }
 }

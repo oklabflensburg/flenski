@@ -11,7 +11,7 @@
 <body class="bg-gray-100 flex items-center justify-center h-screen">
 
   <div class="bg-white shadow-lg rounded-2xl p-6 w-full" style="width: 768px">
-    <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">FlensKI</h1>
+    <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">Flenski</h1>
 
     <div>
       <textarea id="question" placeholder="Hi!"
@@ -41,7 +41,7 @@
 
       try {
 
-        const response = await fetch(`http://localhost:8080/api/chat?message=${encodeURIComponent(question)}`);
+        const response = await fetch(`http://localhost:8080/api/query?q=${encodeURIComponent(question)}`);
 
         if (!response.ok) {
           throw new Error(`Server error: ${response.status}`);
@@ -65,22 +65,16 @@
           });
         }
 
-        if (Array.isArray(data.sources)) {
-          html += `<h2 class="font-semibold mt-4 mb-2">Quellen:</h2><ul >`;
-          data.sources.forEach(src => {
-            html += `
-              <li class="mb-2">
-        <div><span class="font-medium">Url:</span> ${src.url || "-"}</div>
-        <div><span class="font-medium">Typ:</span> ${src.type || "-"}</div>
-        <div><span class="font-medium">Identifier:</span> ${src.identifier || "-"}</div>
-        <div><span class="font-medium">URL:</span> <a href="${src.url}" target="_blank" class="text-blue-600 underline">${src.url || "-"}</a></div>
-      <div><span class="font-medium">Quelle-Datum:</span> ${formatDateTime(src.date)}</div>
-      <div><span class="font-medium">Gesichtet am:</span> ${formatDateTime(src.discoveryDateTime)}</div>
-        <div><span class="font-medium">Distanz:</span> ${src.distance !== undefined ? src.distance : "-"}</div>
-      </li>`;
-          });
-          html += `</ul>`;
-        }
+          if (Array.isArray(data.sources)) {
+            html += `<h2 class="font-semibold mt-4 mb-2">Quellen:</h2><ul >`;
+            data.sources.forEach(src => {
+              html += `
+                <li>
+                  <div class="mb-1"><span class="font-small">Quelle:</span> <a href="${src.source_url || '#'}" target="_blank" class="text-blue-600 underline">${src.source_url || '-'}</a></div>
+                </li>`;
+            });
+            html += `</ul>`;
+          }
 
         answerBox.innerHTML = html;
 

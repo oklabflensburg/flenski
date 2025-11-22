@@ -1,7 +1,6 @@
 package com.flenski.assistant.requests;
 
 import java.io.IOException;
-// import org.json.JSONObject; // entfernt
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -10,10 +9,11 @@ import java.util.Scanner;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flenski.assistant.dto.SourceInfo;
 
 public class SearchRequestIndexer {
 
-    public String search(String query) throws IOException {
+    public List<SourceInfo> search(String query) throws IOException {
         String urlString = "http://localhost:8081/api/search?q=" + java.net.URLEncoder.encode(query, "UTF-8");
         URL url = java.net.URI.create(urlString).toURL();
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -31,24 +31,23 @@ public class SearchRequestIndexer {
         }
         conn.disconnect();
         try {
-            List<String> payloads = extractPayloads(response);
-            return String.join("\n", payloads);
+            List<SourceInfo> sourceInfos = extractSourceInfos(response);
+            return sourceInfos;
         } catch (IOException e) {
             throw new RuntimeException("Failed to extract payloads", e);
         }
     }
 
-    private List<String> extractPayloads(String response) throws IOException {
-        List<String> payloads = new ArrayList<>();
+    private List<SourceInfo> extractSourceInfos(String response) throws IOException {
+        List<SourceInfo> sources = new ArrayList<>();
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(response);
         JsonNode points = root.path("result").path("points");
-        if (points.isArray()) {
             for (JsonNode point : points) {
                 JsonNode payload = point.path("payload");
-                payloads.add(payload.toString());
-            }
+                SourceInfo info = mapper.readValue(payload.toString(), SourceInfo.class);
+                sources.add(info);
         }
-        return payloads;
+        return sources;
     }
 }

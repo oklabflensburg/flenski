@@ -8,8 +8,6 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.flenski.assistant.advisors.TokenUsageAuditAdvisor;
-
 @Configuration
 public class ChatClientConfig {
 
@@ -17,7 +15,6 @@ public class ChatClientConfig {
     public ChatClient chatClient(
             ChatClient.Builder chatClientBuilder
     ) {
-
         ChatOptions chatOptions = ChatOptions.builder()
                 .model("gpt-3.5-turbo")
                 .maxTokens(400)
@@ -26,8 +23,7 @@ public class ChatClientConfig {
 
         return chatClientBuilder
                 .defaultAdvisors(List.of(
-                        new SimpleLoggerAdvisor(),
-                        new TokenUsageAuditAdvisor()
+                        new SimpleLoggerAdvisor()
                 )
                 )
                 .defaultOptions(chatOptions)

@@ -1,7 +1,6 @@
 package com.flenski.dto;
 
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,11 +8,6 @@ import java.util.HashMap;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-
-// import com.flenski.domain.SparseQuery; // Removed unused import
 import com.flenski.service.DenseVectorService;
 import com.flenski.service.SparseVectorService;
 
