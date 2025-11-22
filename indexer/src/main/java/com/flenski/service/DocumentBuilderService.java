@@ -9,9 +9,9 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.stereotype.Service;
+
 import com.flenski.config.IndexingConfig;
 import com.flenski.dto.DocumentDto;
-import com.flenski.dto.Record;
 
 @Service
 public class DocumentBuilderService {
