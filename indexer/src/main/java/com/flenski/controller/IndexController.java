@@ -64,22 +64,6 @@ public class IndexController {
         this.httpClient = HttpClient.newHttpClient();
     }
 
-    @PostMapping(value = "/queue", consumes = "application/json")
-    public ResponseEntity<String> queue(@RequestBody List<Record> records) {
-        logger.info("Received POST request to /api/queue with {} records", records.size());
-
-        if (!records.isEmpty()) {
-            QueueResult queueResult = queueService.add(records);
-            String response = String.format("Queueing completed - added: %d, duplicates: %d",
-                    queueResult.getAdded(), queueResult.getDuplicates());
-            logger.info(response);
-
-            return ResponseEntity.ok(response);
-        }
-
-        return ResponseEntity.ok("No records received for queuing");
-    }
-
     @GetMapping(value = "/point")
     public ResponseEntity<String> point() {
         List<QueueItem> queueItems = queueService.getNext(200);
