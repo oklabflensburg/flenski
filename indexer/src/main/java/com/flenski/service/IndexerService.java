@@ -11,9 +11,9 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
-import com.flenski.dto.IndexResult;
 import com.flenski.dto.Record;
 import com.flenski.repository.QueueItemRepository;
+import com.flenski.result.IndexResult;
 
 @Service
 public class IndexerService {

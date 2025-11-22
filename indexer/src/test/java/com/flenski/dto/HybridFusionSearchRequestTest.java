@@ -1,5 +1,6 @@
 package com.flenski.dto;
 
+import com.flenski.request.HybridFusionSearchRequest;
 import com.flenski.service.DenseVectorService;
 import com.flenski.service.SparseVectorService;
 import org.junit.jupiter.api.Test;

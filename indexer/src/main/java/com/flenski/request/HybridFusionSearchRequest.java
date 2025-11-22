@@ -1,4 +1,4 @@
-package com.flenski.dto;
+package com.flenski.request;
 
 import java.net.URI;
 import java.net.http.HttpRequest;
@@ -8,6 +8,7 @@ import java.util.HashMap;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flenski.dto.Vector;
 import com.flenski.service.DenseVectorService;
 import com.flenski.service.SparseVectorService;
 

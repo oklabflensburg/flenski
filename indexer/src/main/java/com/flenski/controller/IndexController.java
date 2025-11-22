@@ -16,20 +16,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.flenski.dto.HybridFusionSearchRequest;
-import com.flenski.dto.IndexRequest;
 import com.flenski.dto.Point;
-import com.flenski.dto.QueueResult;
 import com.flenski.dto.Record;
-import com.flenski.dto.SourceType;
 import com.flenski.dto.Vector;
 import com.flenski.entity.QueueItem;
+import com.flenski.request.HybridFusionSearchRequest;
+import com.flenski.request.IndexRequest;
+import com.flenski.result.QueueResult;
 import com.flenski.service.DenseVectorService;
 import com.flenski.service.DocumentBuilderService;
 import com.flenski.service.IndexerService;
 import com.flenski.service.PdfConverterService;
 import com.flenski.service.QueueService;
 import com.flenski.service.SparseVectorService;
+import com.flenski.type.SourceType;
 
 @RestController
 @RequestMapping("/api")

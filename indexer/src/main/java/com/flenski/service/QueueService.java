@@ -8,10 +8,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import com.flenski.dto.QueueResult;
 import com.flenski.dto.Record;
 import com.flenski.entity.QueueItem;
 import com.flenski.repository.QueueItemRepository;
+import com.flenski.result.QueueResult;
 
 @Service
 public class QueueService {

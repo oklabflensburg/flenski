@@ -1,4 +1,4 @@
-package com.flenski.dto;
+package com.flenski.result;
 
 public class IndexResult {
     private int total;

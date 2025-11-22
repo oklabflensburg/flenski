@@ -8,6 +8,7 @@ import java.util.Base64;
 import org.hibernate.validator.constraints.URL;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.flenski.type.SourceType;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

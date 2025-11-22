@@ -1,12 +1,14 @@
-package com.flenski.dto;
+package com.flenski.request;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.util.ArrayList;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.List;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flenski.dto.Point;
 
 public class IndexRequest {
 

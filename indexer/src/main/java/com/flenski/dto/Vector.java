@@ -1,5 +1,7 @@
 package com.flenski.dto;
 
+import com.flenski.type.VectorType;
+
 public class Vector {
 
     private String name;

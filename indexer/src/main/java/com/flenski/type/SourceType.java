@@ -1,4 +1,4 @@
-package com.flenski.dto;
+package com.flenski.type;
 
 public enum SourceType {
     PDF, WEBSITE, TEXT

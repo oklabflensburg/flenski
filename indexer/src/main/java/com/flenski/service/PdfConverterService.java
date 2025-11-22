@@ -18,7 +18,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
 import com.flenski.dto.Record;
-import com.flenski.dto.SourceType;
+import com.flenski.type.SourceType;
 
 import lombok.extern.slf4j.Slf4j;
 
