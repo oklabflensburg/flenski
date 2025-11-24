@@ -1,11 +1,14 @@
 package com.flenski.dto;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.flenski.request.HybridFusionSearchRequest;
 import com.flenski.service.DenseVectorService;
 import com.flenski.service.SparseVectorService;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class HybridFusionSearchRequestTest {
     @Test
@@ -21,7 +24,7 @@ class HybridFusionSearchRequestTest {
 
         HybridFusionSearchRequest request = new HybridFusionSearchRequest(sparseService, denseService);
         request.setQueryText("test", 10);
-        String json = request.build();
-        assertEquals("{\"prefetch\":[{\"using\":\"sparse\",\"query\":[1,2],\"limit\":10},{\"using\":\"dense\",\"query\":[0.1,0.2],\"limit\":10}],\"query\":{\"fusion\":\"rrf\"}}", json);
+        String json = request.buildJson();
+        assertEquals("{\"prefetch\":[{\"using\":\"sparse\",\"query\":[1,2],\"limit\":10},{\"using\":\"dense\",\"query\":[0.1,0.2],\"limit\":10}],\"query\":{\"fusion\":\"rrf\"},\"with_payload\":true}", json);
     }
 }

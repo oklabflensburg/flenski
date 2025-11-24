@@ -21,6 +21,40 @@ import com.flenski.service.SparseVectorService;
  */
 @Service
 public class HybridFusionSearchRequest {
+    // ...existing code...
+    public String buildJson() {
+        Vector sparseVector = sparseVectorService.embed(queryText);
+        Vector denseVector = denseVectorService.embed(queryText);
+
+        HashMap<String, Object> sparseQueryMap = new HashMap<>();
+        sparseQueryMap.put("query", sparseVector.toQdrantFormat());
+        sparseQueryMap.put("using", "sparse");
+        sparseQueryMap.put("limit", limit);
+
+        HashMap<String, Object> denseQueryMap = new HashMap<>();
+        denseQueryMap.put("query", denseVector.toQdrantFormat());
+        denseQueryMap.put("using", "dense");
+        denseQueryMap.put("limit", limit);
+
+        ArrayList<HashMap<String, Object>> prefetchList = new ArrayList<>();
+        prefetchList.add(sparseQueryMap);
+        prefetchList.add(denseQueryMap);
+
+        HashMap<String, Object> queryMap = new HashMap<>();
+        queryMap.put("fusion", "rrf");
+
+        HashMap<String, Object> rootMap = new HashMap<>();
+        rootMap.put("prefetch", prefetchList);
+        rootMap.put("query", queryMap);
+        rootMap.put("with_payload", true);
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(rootMap);
+        } catch (Throwable e) {
+            throw new RuntimeException("Failed to build HybridFusionSearchRequest JSON", e);
+        }
+    }
 
     private int limit;
     private String queryText;

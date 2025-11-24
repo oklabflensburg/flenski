@@ -31,6 +31,10 @@ public class IndexerService {
 
         List<Document> documents = documentBuilderService.toChunkDocuments(document);
     
+
+        /**
+         * TODO: move the indexing logic here from IndexController
+         */
         
          return new IndexResult(0, 0, 0, 0);
     }

@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.flenski.dto.DocumentDto;
 import com.flenski.dto.Point;
-import com.flenski.dto.Record;
 import com.flenski.dto.Vector;
 import com.flenski.entity.QueueItem;
 import com.flenski.request.HybridFusionSearchRequest;
@@ -76,7 +75,6 @@ public class IndexController {
                 }
                 DocumentDto documentDto = item.getDocument();
                 indexerService.index(documentDto);
-
 
                 List<Document> documents = documentBuilderService.toChunkDocuments(documentDto);
                 for (Document doc : documents) {

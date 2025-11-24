@@ -2,7 +2,6 @@ package com.flenski.service;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
@@ -30,20 +29,6 @@ public class QueueService {
 
         AtomicInteger amountDuplicates = new AtomicInteger(0);
         AtomicInteger amountSaved = new AtomicInteger(0);
-
-        List<DocumentDto> filteredDocuments = documents.stream()
-                .filter(documentDto -> {
-                    if (queueItemRepository.existsByIdentifier(documentDto.getSourceIdentifier())) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                })
-                .collect(Collectors.toList());
-
-        List<QueueItem> queueItems = filteredDocuments.stream()
-                .map(this::mapDocumentDtoToQueueItem)
-                .collect(Collectors.toList());
 
         for (DocumentDto documentDto : documents) {
             QueueItem queueItem = mapDocumentDtoToQueueItem(documentDto);
