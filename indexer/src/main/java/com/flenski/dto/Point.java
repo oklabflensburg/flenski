@@ -1,6 +1,8 @@
 package com.flenski.dto;
 import java.util.List;
 import java.util.Map;
+import com.flenski.dto.Vector;
+
 
 public class Point {
     private int id;
@@ -9,7 +11,7 @@ public class Point {
 
     public Map<String, Object> toJsonMap() {
         var point = new java.util.HashMap<String, Object>();
-        point.put("id", id);
+        //point.put("id", id);
         var vectorObj = new java.util.HashMap<String, Object>();
         for (Vector v : vectors) {
             if (v.getName() != null) {
@@ -21,8 +23,15 @@ public class Point {
         return point;
     }
 
-    public int getId() {
-        return id;
+    public Point build(DocumentDto document, String content, Vector sparseVector, Vector denseVector) {
+        this.addToPayload( "sourceUrl", document.getSourceUrl());
+        this.addToPayload("content", content);
+        this.addToPayload("source_identifier", document.getSourceIdentifier());
+        this.addToPayload("discovery_date_time", document.getDiscoveryDateTime().toString());
+        this.addToPayload("source_date_time", document.getSourceDateTime().toString());
+        this.addVector(sparseVector);
+        this.addVector(denseVector);
+        return this;
     }
 
     public void setId(int id) {

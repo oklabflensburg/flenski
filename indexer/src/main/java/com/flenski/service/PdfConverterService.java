@@ -11,10 +11,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.flenski.dto.DocumentDto;
@@ -35,22 +37,22 @@ public class PdfConverterService {
                 .build();
     }
 
-    public DocumentDto index(String fileUrl) {
+    @Async
+    public CompletableFuture<DocumentDto> convertPdfToDocument(String fileUrl) throws RuntimeException {
         try {
             log.info("Starting PDF processing for URL: {}", fileUrl);
             InputStream pdfInputStream = downloadPdf(fileUrl);
             String extractedText = extractTextFromPdf(pdfInputStream);
             DocumentDto documentDto = createDocument(fileUrl, extractedText);
-            
             log.info("Successfully processed PDF from URL: {}", fileUrl);
-            return documentDto;
-            
-        } catch (Exception e) {
+            return CompletableFuture.completedFuture(documentDto);
+        } catch (IOException | URISyntaxException | InterruptedException e) {
             log.error("Error processing PDF from URL: {}", fileUrl, e);
             throw new RuntimeException("Failed to process PDF from URL: " + fileUrl, e);
         }
     }
 
+    
     private InputStream downloadPdf(String fileUrl) throws IOException, InterruptedException, URISyntaxException {
         log.debug("Downloading PDF from: {}", fileUrl);
         

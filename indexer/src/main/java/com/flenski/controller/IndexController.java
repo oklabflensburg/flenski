@@ -3,7 +3,9 @@ package com.flenski.controller;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,7 @@ import com.flenski.dto.Vector;
 import com.flenski.entity.QueueItem;
 import com.flenski.request.HybridFusionSearchRequest;
 import com.flenski.request.IndexRequest;
+import com.flenski.result.IndexResult;
 import com.flenski.service.DenseVectorService;
 import com.flenski.service.DocumentBuilderService;
 import com.flenski.service.IndexerService;
@@ -27,6 +30,8 @@ import com.flenski.service.PdfConverterService;
 import com.flenski.service.QueueService;
 import com.flenski.service.SparseVectorService;
 import com.flenski.type.SourceType;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
 @RequestMapping("/api")
@@ -74,8 +79,6 @@ public class IndexController {
                     return ResponseEntity.status(404).body("No queue items available");
                 }
                 DocumentDto documentDto = item.getDocument();
-                indexerService.index(documentDto);
-
                 List<Document> documents = documentBuilderService.toChunkDocuments(documentDto);
                 for (Document doc : documents) {
                     try {
@@ -115,10 +118,15 @@ public class IndexController {
     }
 
     @GetMapping(value = "/index")
-    public ResponseEntity<String> index() {
+    public CompletableFuture<ResponseEntity<String>> index() {
         logger.info("Received GET request to /api/index");
 
         List<QueueItem> queueItems = queueService.getNext(50);
+        AtomicInteger addedCount = new AtomicInteger(0);
+        AtomicInteger failedCount = new AtomicInteger(0);
+        AtomicInteger duplicateCount = new AtomicInteger(0);
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         if (!queueItems.isEmpty()) {
             for (int i = 0; i < queueItems.size(); i++) {
@@ -126,13 +134,21 @@ public class IndexController {
                 try {
                     DocumentDto documentDto = queueItem.getDocument();
                     try {
-                        if (documentDto.getSourceType() == SourceType.PDF) {
-                            logger.info("Converting PDF record: {}", documentDto.getSourceUrl());
-                            DocumentDto convertedDocument = pdfConverterService.index(documentDto.getSourceUrl());
-                            indexerService.index(convertedDocument);
-                        } else {
-                            indexerService.index(documentDto);
-                        }
+                        CompletableFuture<Void> future = indexerService.prepareDocumentForIndexing(documentDto)
+                                .thenCompose(preparedDocument -> indexerService.indexAsHybridVector(preparedDocument))
+                                .thenAccept(indexResult -> {
+                                    addedCount.addAndGet(indexResult.getIndexed());
+                                    failedCount.addAndGet(indexResult.getFailed());
+                                    duplicateCount.addAndGet(indexResult.getDuplicates());
+                                })
+                                .exceptionally(e -> {
+                                    logger.error("Error indexing document: {}", documentDto.getSourceUrl(), e);
+                                    failedCount.incrementAndGet();
+                                    return null;
+                                });
+
+                        futures.add(future);
+
                         //  queueService.delete(queueItem);
                     } catch (Throwable t) {
                         logger.error("Error processing record: {}", documentDto.getSourceUrl(), t);
@@ -143,8 +159,12 @@ public class IndexController {
             }
         }
 
-        String response = "Indexing completed";
-        return ResponseEntity.ok(response);
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> {
+                    String response = String.format("Indexing completed. Added: {}, Failed: {}, Duplicates: {}",
+                            addedCount.get(), failedCount.get(), duplicateCount.get());
+                    return ResponseEntity.ok(response);
+                });
     }
 
     @GetMapping(value = "/search")
@@ -154,7 +174,7 @@ public class IndexController {
         HttpRequest request = hybridFusionSearchRequest.build();
         try {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-             return ResponseEntity.ok(response.body());
+            return ResponseEntity.ok(response.body());
         } catch (Throwable e) {
             throw new RuntimeException("Failed to execute search request", e);
         }

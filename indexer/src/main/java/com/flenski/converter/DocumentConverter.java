@@ -30,6 +30,9 @@ public class DocumentConverter implements AttributeConverter<DocumentDto, String
 
     @Override
     public DocumentDto convertToEntityAttribute(String json) {
+        if (json == null || json.trim().isEmpty()) {
+            return null;
+        }
         try {
             return objectMapper.readValue(json, DocumentDto.class);
         } catch (JsonProcessingException e) {

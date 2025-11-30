@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.flenski.dto.DocumentDto;
-import com.flenski.dto.Record;
 import com.flenski.result.QueueResult;
 import com.flenski.service.QueueService;
 
