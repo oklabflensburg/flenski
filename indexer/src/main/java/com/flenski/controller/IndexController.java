@@ -132,7 +132,7 @@ public class IndexController {
             for (int i = 0; i < queueItems.size(); i++) {
                 QueueItem queueItem = queueItems.get(i);
                 try {
-                    DocumentDto documentDto = queueItem.getDocument();
+                    DocumentDto documentDto = queueItem.getRecord();
                     try {
                         CompletableFuture<Void> future = indexerService.prepareDocumentForIndexing(documentDto)
                                 .thenCompose(preparedDocument -> indexerService.indexAsHybridVector(preparedDocument))

@@ -6,16 +6,17 @@ import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.flenski.dto.DocumentDto;
+import com.flenski.dto.Point;
 import com.flenski.dto.Vector;
-import com.flenski.repository.QueueItemRepository;
+import com.flenski.request.IndexRequest;
 import com.flenski.result.IndexResult;
 import com.flenski.type.SourceType;
-import com.flenski.dto.Point;
+import java.net.http.HttpResponse;
+
 
 @Service
 public class IndexerService {
@@ -28,17 +29,20 @@ public class IndexerService {
     private final DenseVectorService denseVectorService;
     private final SparseVectorService sparseVectorService;
     private final PdfConverterService pdfConverterService;
+    private final HttpService httpService;
 
     public IndexerService(
             DocumentBuilderService documentBuilderService,
             DenseVectorService denseVectorService,
             SparseVectorService sparseVectorService,
-            PdfConverterService pdfConverterService
+            PdfConverterService pdfConverterService,
+            HttpService httpService
     ) {
         this.documentBuilderService = documentBuilderService;
         this.denseVectorService = denseVectorService;
         this.sparseVectorService = sparseVectorService;
         this.pdfConverterService = pdfConverterService;
+        this.httpService = httpService;
     }
 
     @Async
@@ -53,6 +57,7 @@ public class IndexerService {
     public CompletableFuture<IndexResult> indexAsHybridVector(DocumentDto document) {
 
         List<Document> documentChunks = documentBuilderService.toChunkDocuments(document);
+        IndexRequest indexRequest = new IndexRequest();
         for (Document documentChunk : documentChunks) {
             try {
                 Vector denseVector = denseVectorService.embed(documentChunk);
@@ -64,11 +69,16 @@ public class IndexerService {
                 Point point = new Point();
                 point.build(document, documentChunk.getText(), sparseVector, denseVector);
 
+                indexRequest.addPoint(point);
+
             } catch (Throwable t) {
                 logger.error("Error sending request to Qdrant: {}", t.getMessage(), t);
             }
         }
 
+        HttpResponse<String> response = httpService.sendRequest(indexRequest);
+
         return CompletableFuture.completedFuture(new IndexResult(0, 0, 0, 0));
     }
+
 }

@@ -33,9 +33,9 @@ public class QueueItem {
     @Column(name = "identifier", nullable = false, updatable = false, unique = true)
     private String identifier;
 
-    @Column(name = "document", columnDefinition = "TEXT", nullable = false, updatable = false)
+    @Column(name = "record", columnDefinition = "TEXT", nullable = false, updatable = false)
     @Convert(converter = DocumentConverter.class)
-    private DocumentDto document;
+    private DocumentDto record;
 
     public Long getId() {
         return id;
@@ -61,12 +61,12 @@ public class QueueItem {
         this.identifier = identifier;
     }
 
-    public DocumentDto getDocument() {
-        return document;
+    public DocumentDto getRecord() {
+        return record;
     }
 
-    public void setDocument(DocumentDto document) {
-        this.document = document;
+    public void setRecord(DocumentDto record) {
+        this.record = record;
     }
 
     @PrePersist

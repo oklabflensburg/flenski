@@ -10,7 +10,7 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flenski.dto.Point;
 
-public class IndexRequest {
+public class IndexRequest implements RequestInterface {
 
     ArrayList<Point> points;
 
