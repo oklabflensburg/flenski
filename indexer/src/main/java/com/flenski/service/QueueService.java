@@ -55,7 +55,7 @@ public class QueueService {
     private QueueItem mapDocumentDtoToQueueItem(DocumentDto documentDto) {
         QueueItem queueItem = new QueueItem();
         queueItem.setIdentifier(documentDto.createHash());
-        queueItem.setDocument(documentDto);
+        queueItem.setRecord(documentDto);
         return queueItem;
     }
 }

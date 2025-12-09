@@ -1,182 +1,116 @@
 package com.flenski.controller;
 
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.document.Document;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.flenski.dto.DocumentDto;
-import com.flenski.dto.Point;
-import com.flenski.dto.Vector;
 import com.flenski.entity.QueueItem;
-import com.flenski.request.HybridFusionSearchRequest;
-import com.flenski.request.IndexRequest;
-import com.flenski.result.IndexResult;
-import com.flenski.service.DenseVectorService;
-import com.flenski.service.DocumentBuilderService;
 import com.flenski.service.IndexerService;
-import com.flenski.service.PdfConverterService;
 import com.flenski.service.QueueService;
-import com.flenski.service.SparseVectorService;
-import com.flenski.type.SourceType;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import io.qdrant.client.QdrantClient;
+import io.qdrant.client.QdrantGrpcClient;
+import io.qdrant.client.grpc.Collections.CreateCollection;
+import io.qdrant.client.grpc.Collections.Distance;
+import io.qdrant.client.grpc.Collections.SparseVectorConfig;
+import io.qdrant.client.grpc.Collections.SparseVectorParams;
+import io.qdrant.client.grpc.Collections.VectorParams;
+import io.qdrant.client.grpc.Collections.VectorParamsMap;
+import io.qdrant.client.grpc.Collections.VectorsConfig;
+import io.qdrant.client.grpc.Collections;
 
 @RestController
 @RequestMapping("/api")
 public class IndexController {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexController.class);
-    private final IndexerService indexerService;
-    private final PdfConverterService pdfConverterService;
+    private final QdrantClient client;
     private final QueueService queueService;
-    private final SparseVectorService sparseVectorService;
-    private final DenseVectorService denseVectorService;
-    private final DocumentBuilderService documentBuilderService;
-    private final HybridFusionSearchRequest hybridFusionSearchRequest;
-    private final HttpClient httpClient;
+    private final IndexerService indexerService;
 
-    public IndexController(
-            IndexerService indexerService,
-            PdfConverterService pdfConverterService,
-            QueueService queueService,
-            SparseVectorService sparseVectorService,
-            DenseVectorService denseVectorService,
-            DocumentBuilderService documentBuilderService,
-            HybridFusionSearchRequest hybridFusionSearchRequest
-    ) {
-        this.indexerService = indexerService;
-        this.pdfConverterService = pdfConverterService;
+    public IndexController(QueueService queueService, IndexerService indexerService) {
         this.queueService = queueService;
-        this.sparseVectorService = sparseVectorService;
-        this.denseVectorService = denseVectorService;
-        this.documentBuilderService = documentBuilderService;
-        this.hybridFusionSearchRequest = hybridFusionSearchRequest;
-        this.httpClient = HttpClient.newHttpClient();
+        this.indexerService = indexerService;
+        this.client = new QdrantClient(
+                QdrantGrpcClient.newBuilder("localhost", 6334, false).build()
+        );
     }
 
-    @GetMapping(value = "/point")
-    public ResponseEntity<String> point() {
-        List<QueueItem> queueItems = queueService.getNext(200);
+    @PostMapping("collection")
+    public ResponseEntity<String> createCollection() throws InterruptedException, ExecutionException {
 
-        int id = 1;
-        for (QueueItem item : queueItems) {
+        this.client.createCollectionAsync(
+                CreateCollection.newBuilder()
+                        .setCollectionName("test")
+                        .setVectorsConfig(VectorsConfig.newBuilder().setParamsMap(
+                                VectorParamsMap.newBuilder().putAllMap(
+                                        Map.of(
+                                                "dense",
+                                                VectorParams.newBuilder()
+                                                        .setSize(1536)
+                                                        .setDistance(Distance.Cosine)
+                                                        .setDatatype(Collections.Datatype.Float32)
+                                                        .setHnswConfig(
+                                                                Collections.HnswConfigDiff.newBuilder()
+                                                                        .setM(24)
+                                                                        .setEfConstruct(256)
+                                                                        .setPayloadM(24)
+                                                                        .build()
+                                                        )
+                                                        .build()
+                                        )
+                                )
+                        )
+                        )
+                        .setSparseVectorsConfig(SparseVectorConfig.newBuilder().putMap(
+                                "sparse", SparseVectorParams.getDefaultInstance()))
+                        .build())
+                .get();
+
+        return ResponseEntity.ok("Collection created");
+    }
+
+    @PostMapping("/point")
+    ResponseEntity<String> upsertPoint() {
+
+        List<QueueItem> queueItems = queueService.getNext(5);
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        for (QueueItem queueItem : queueItems) {
             try {
-                logger.info("Queue Item ID: {}, Record Source URL: {}", item.getId(), item.getDocument().getSourceUrl());
+                DocumentDto documentDto = queueItem.getRecord();
+                try {
+                    CompletableFuture<Void> future = indexerService.prepareDocumentForIndexing(documentDto)
+                            .thenCompose(preparedDocument -> indexerService.upsert(preparedDocument))
+                            .thenAccept(indexResult -> {
+                                logger.info("Indexed document: {}", documentDto.getSourceUrl());
+                            })
+                            .exceptionally(e -> {
+                                logger.error("Error indexing document: {}", documentDto.getSourceUrl(), e);
+                                return null;
+                            });
 
-                if (queueItems.isEmpty()) {
-                    return ResponseEntity.status(404).body("No queue items available");
-                }
-                DocumentDto documentDto = item.getDocument();
-                List<Document> documents = documentBuilderService.toChunkDocuments(documentDto);
-                for (Document doc : documents) {
-                    try {
-                        Vector denseVector = denseVectorService.embed(doc);
-                        denseVector.setName("dense");
+                    futures.add(future);
 
-                        Vector sparseVector = sparseVectorService.embed(doc.getText());
-                        sparseVector.setName("sparse");
-
-                        Point point = new Point();
-                        point.setId(id);
-                        point.addVector(sparseVector);
-                        point.addVector(denseVector);
-                        point.addToPayload("source_url", documentDto.getSourceUrl());
-                        point.addToPayload("content", doc.getText());
-                        point.addToPayload("source_identifier", documentDto.getSourceIdentifier());
-                        point.addToPayload("discovery_date_time", documentDto.getDiscoveryDateTime().toString());
-                        point.addToPayload("source_date_time", documentDto.getSourceDateTime().toString());
-                        IndexRequest indexRequest = new IndexRequest();
-                        indexRequest.addPoint(point);
-                        HttpRequest request = indexRequest.build();
-
-                        logger.info("Sending request for point with id : {}", id);
-                        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-                        logger.info("Qdrant response: {}", response.body());
-                    } catch (Throwable t) {
-                        logger.error("Error sending request to Qdrant: {}", t.getMessage(), t);
-                    }
-                    id++;
+                    //  queueService.delete(queueItem);
+                } catch (Throwable t) {
+                    logger.error("Error processing record: {}", documentDto.getSourceUrl(), t);
                 }
             } catch (Throwable t) {
-                logger.error("Error processing queue item: {}", item.getId(), t);
+                logger.error("Error processing queue item: {}", queueItem.getId(), t);
             }
+
         }
 
         return ResponseEntity.ok("ok");
-    }
-
-    @GetMapping(value = "/index")
-    public CompletableFuture<ResponseEntity<String>> index() {
-        logger.info("Received GET request to /api/index");
-
-        List<QueueItem> queueItems = queueService.getNext(50);
-        AtomicInteger addedCount = new AtomicInteger(0);
-        AtomicInteger failedCount = new AtomicInteger(0);
-        AtomicInteger duplicateCount = new AtomicInteger(0);
-
-        List<CompletableFuture<Void>> futures = new ArrayList<>();
-
-        if (!queueItems.isEmpty()) {
-            for (int i = 0; i < queueItems.size(); i++) {
-                QueueItem queueItem = queueItems.get(i);
-                try {
-                    DocumentDto documentDto = queueItem.getRecord();
-                    try {
-                        CompletableFuture<Void> future = indexerService.prepareDocumentForIndexing(documentDto)
-                                .thenCompose(preparedDocument -> indexerService.indexAsHybridVector(preparedDocument))
-                                .thenAccept(indexResult -> {
-                                    addedCount.addAndGet(indexResult.getIndexed());
-                                    failedCount.addAndGet(indexResult.getFailed());
-                                    duplicateCount.addAndGet(indexResult.getDuplicates());
-                                })
-                                .exceptionally(e -> {
-                                    logger.error("Error indexing document: {}", documentDto.getSourceUrl(), e);
-                                    failedCount.incrementAndGet();
-                                    return null;
-                                });
-
-                        futures.add(future);
-
-                        //  queueService.delete(queueItem);
-                    } catch (Throwable t) {
-                        logger.error("Error processing record: {}", documentDto.getSourceUrl(), t);
-                    }
-                } catch (Throwable t) {
-                    logger.error("Error processing queue item: {}", queueItem.getId(), t);
-                }
-            }
-        }
-
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApply(v -> {
-                    String response = String.format("Indexing completed. Added: {}, Failed: {}, Duplicates: {}",
-                            addedCount.get(), failedCount.get(), duplicateCount.get());
-                    return ResponseEntity.ok(response);
-                });
-    }
-
-    @GetMapping(value = "/search")
-    public ResponseEntity<String> search(@RequestParam(name = "q") String q) {
-
-        hybridFusionSearchRequest.setQueryText(q, 10);
-        HttpRequest request = hybridFusionSearchRequest.build();
-        try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            return ResponseEntity.ok(response.body());
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to execute search request", e);
-        }
     }
 }

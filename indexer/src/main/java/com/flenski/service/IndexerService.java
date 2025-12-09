@@ -1,8 +1,12 @@
 package com.flenski.service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import org.apache.hc.core5.http.impl.io.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
@@ -10,13 +14,19 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.flenski.dto.DocumentDto;
-import com.flenski.dto.Point;
-import com.flenski.dto.Vector;
-import com.flenski.request.IndexRequest;
-import com.flenski.result.IndexResult;
 import com.flenski.type.SourceType;
-import java.net.http.HttpResponse;
 
+import io.qdrant.client.PointIdFactory;
+import io.qdrant.client.QdrantClient;
+import io.qdrant.client.QdrantGrpcClient;
+import static io.qdrant.client.ValueFactory.value;
+import io.qdrant.client.grpc.JsonWithInt.Value;
+import io.qdrant.client.grpc.Points.DenseVector;
+import io.qdrant.client.grpc.Points.NamedVectors;
+import io.qdrant.client.grpc.Points.PointStruct;
+import io.qdrant.client.grpc.Points.SparseVector;
+import io.qdrant.client.grpc.Points.Vector;
+import io.qdrant.client.grpc.Points.Vectors;
 
 @Service
 public class IndexerService {
@@ -29,20 +39,24 @@ public class IndexerService {
     private final DenseVectorService denseVectorService;
     private final SparseVectorService sparseVectorService;
     private final PdfConverterService pdfConverterService;
-    private final HttpService httpService;
+    private final QdrantClient client;
+    private final VectorService vectorService;
 
     public IndexerService(
             DocumentBuilderService documentBuilderService,
             DenseVectorService denseVectorService,
             SparseVectorService sparseVectorService,
             PdfConverterService pdfConverterService,
-            HttpService httpService
+            VectorService vectorService
     ) {
         this.documentBuilderService = documentBuilderService;
         this.denseVectorService = denseVectorService;
         this.sparseVectorService = sparseVectorService;
         this.pdfConverterService = pdfConverterService;
-        this.httpService = httpService;
+        this.vectorService = vectorService;
+        this.client = new QdrantClient(
+                QdrantGrpcClient.newBuilder("localhost", 6334, false).build()
+        );
     }
 
     @Async
@@ -53,32 +67,50 @@ public class IndexerService {
         return CompletableFuture.completedFuture(document);
     }
 
-    @Async
-    public CompletableFuture<IndexResult> indexAsHybridVector(DocumentDto document) {
 
+    public CompletableFuture<String> upsert(DocumentDto document) {
         List<Document> documentChunks = documentBuilderService.toChunkDocuments(document);
-        IndexRequest indexRequest = new IndexRequest();
+        List<PointStruct> points = new ArrayList<>();
+
         for (Document documentChunk : documentChunks) {
-            try {
-                Vector denseVector = denseVectorService.embed(documentChunk);
-                denseVector.setName(DENSE_VECTOR_NAME);
+            DenseVector denseVector = denseVectorService.embed(documentChunk);
+            SparseVector sparseVector = sparseVectorService.embed(documentChunk.getText());
 
-                Vector sparseVector = sparseVectorService.embed(documentChunk.getText());
-                sparseVector.setName(SPARSE_VECTOR_NAME);
+            NamedVectors namedVectors = NamedVectors.newBuilder()
+                    .putAllVectors(
+                        Map.of(
+                            DENSE_VECTOR_NAME,
+                            Vector.newBuilder().setDense(denseVector).build(),
+                            SPARSE_VECTOR_NAME,
+                            Vector.newBuilder().setSparse(sparseVector).build()
+                        )
+                    )
+                    .build();
 
-                Point point = new Point();
-                point.build(document, documentChunk.getText(), sparseVector, denseVector);
+            Vectors vectors = Vectors.newBuilder().setVectors(namedVectors).build();
 
-                indexRequest.addPoint(point);
+            UUID uuid = this.vectorService.uuid(denseVector);
+            PointStruct point = PointStruct.newBuilder()
+                    .setVectors(vectors)
+                    .putAllPayload(buildPayload(document, documentChunk))
+                    .setId(PointIdFactory.id(uuid))
+                    .build();
 
-            } catch (Throwable t) {
-                logger.error("Error sending request to Qdrant: {}", t.getMessage(), t);
-            }
+            points.add(point);
         }
+        this.client.upsertAsync("test", points);
+        return CompletableFuture.completedFuture("ok");
+    }
 
-        HttpResponse<String> response = httpService.sendRequest(indexRequest);
-
-        return CompletableFuture.completedFuture(new IndexResult(0, 0, 0, 0));
+    Map<String, Value> buildPayload(DocumentDto document, Document chunk) {
+        return Map.of(
+                "source_url", value(document.getSourceUrl()),
+                "source_identifier", value(document.getSourceIdentifier() != null ? document.getSourceIdentifier() : ""),
+                "discovery_date_time", value(document.getDiscoveryDateTime() != null ? document.getDiscoveryDateTime().toString() : ""),
+                "source_date_time", value(document.getSourceDateTime() != null ? document.getSourceDateTime().toString() : ""),
+                "content", value(chunk.getText()
+            )
+        );
     }
 
 }

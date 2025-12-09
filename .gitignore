@@ -6,3 +6,4 @@ notes.md
 data/
 .env
 vocabulary.json
+/build/

@@ -16,7 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flenski.dto.Vector;
+
+import io.qdrant.client.grpc.Points.SparseVector;
 
 @Service
 public class SparseVectorService {
@@ -52,7 +53,7 @@ public class SparseVectorService {
      * @param avgDocLen
      * @return
      */
-    public Vector embed(String text) {
+    public SparseVector embed(String text) {
 
         List<String> tokens = buildTokenList(text);
         vocabularyService.ensureVocabularyFor(tokens);
@@ -65,7 +66,7 @@ public class SparseVectorService {
         }
 
         List<Integer> indicesList = new ArrayList<>();
-        List<Double> valuesList = new ArrayList<>();
+        List<Float> valuesList = new ArrayList<>();
 
         for (Map.Entry<String, Integer> entry : tf.entrySet()) {
             Integer dimension = vocabularyService.getVocabulary().get(entry.getKey());
@@ -77,7 +78,7 @@ public class SparseVectorService {
             double normalization = frequency * (k1 + 1.0) / (frequency + k1 * (1.0 - b + b * (dl / Math.max(1.0, avgDocLen))));
             if (normalization != 0.0) {
                 indicesList.add(dimension);
-                valuesList.add((double) normalization);
+                 valuesList.add((float) normalization);
             }
         }
 
@@ -88,14 +89,18 @@ public class SparseVectorService {
 
         int n = order.size();
         int[] indices = new int[n];
-        double[] values = new double[n];
+        List<Float> sortedValues = new ArrayList<>(n);
         for (int k = 0; k < n; k++) {
             int j = order.get(k);
             indices[k] = indicesList.get(j);
-            values[k] = valuesList.get(j);
+            sortedValues.add(valuesList.get(j));
         }
 
-        return new Vector(values, indices);
+        SparseVector vector = SparseVector.newBuilder()
+            .addAllIndices(IntStream.of(indices).boxed().toList())
+            .addAllValues(sortedValues)
+            .build();
+        return vector;
     }
 
     private List<String> buildTokenList(String text) {

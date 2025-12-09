@@ -34,21 +34,16 @@ public class DocumentBuilderService {
     }
 
     public Document mapDocumentDtoToDocument(DocumentDto documentDto) {
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("sourceIdentifier", documentDto.getSourceIdentifier());
-        metadata.put("sourceName", documentDto.getSourceName());
-        metadata.put("sourceUrl", documentDto.getSourceUrl());
-        metadata.put("sourceType", documentDto.getSourceType().toString());
-        metadata.put("hash", documentDto.createHash());
+        Map<String, Object> metaData = Map.of(
+            "sourceIdentifier", documentDto.getSourceIdentifier(),
+            "sourceName", documentDto.getSourceName(),
+            "sourceUrl", documentDto.getSourceUrl(),
+            "sourceType", documentDto.getSourceType().toString(),
+            "sourceDateTime", documentDto.getSourceDateTime() != null ? documentDto.getSourceDateTime().toString() : "",
+            "discoveryDateTime", documentDto.getDiscoveryDateTime() != null ? documentDto.getDiscoveryDateTime().toString() : ""    
+        );
 
-        if (documentDto.getSourceDateTime() != null) {
-            metadata.put("sourceDateTime", documentDto.getSourceDateTime().toString());
-        }
-
-        if (documentDto.getDiscoveryDateTime() != null) {
-            metadata.put("discoveryDateTime", documentDto.getDiscoveryDateTime().toString());
-        }
         String documentId = UUID.randomUUID().toString();
-        return new Document(documentId, documentDto.getContent(), metadata);
+        return new Document(documentId, documentDto.getContent(), metaData);
     }
 }
