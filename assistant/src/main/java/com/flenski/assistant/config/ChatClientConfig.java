@@ -22,9 +22,7 @@ public class ChatClientConfig {
                 .build();
 
         return chatClientBuilder
-                .defaultAdvisors(List.of(
-                        new SimpleLoggerAdvisor()
-                )
+                .defaultAdvisors(List.of(new SimpleLoggerAdvisor())
                 )
                 .defaultOptions(chatOptions)
                 .build();
