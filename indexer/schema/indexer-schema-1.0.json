@@ -8,15 +8,15 @@
         "type": "object",
         "title": "Item",
         "properties": {
-            "sourceIdentifier": {
+            "identifier": {
                 "type": "string",
                 "description": "An identifier of the source. E.g. a filename or a title of a website."
             },
-            "sourceName": {
+            "name": {
                 "type": "string",
-                "description": "A human readable reference about the content. E.g. the main heading of the document, the name of an event."
+                "description": "A human readable reference, e.g. a file title"
             },
-            "sourceUrl": {
+            "url": {
                 "type": "string",
                 "format": "uri",
                 "description": "Full URL of the source"
@@ -26,12 +26,24 @@
                 "format": "date-time",
                 "description": "UTC format. The date (and time) the source is referring to. E.g. the date of an event (not the date when the source has been downloaded). If time is not relevant, use 00:00.00"
             },
+            "title": {
+                "type": "string",
+                "description": "Title of the source. E.g. the title of a web page or the title of a document."
+            },
+            "description": {
+                "type": "string",
+                "description": "A short description of the source."
+            },
+            "summary": {
+                "type": "string",
+                "description": "A short summary of the source. Can be used for a generated summary."
+            },
             "discoveryDateTime": {
                 "type": "string",
                 "format": "date-time",
                 "description": "UTC format. The date and time where the source has been discovered. E.g. the datetime where a web source has been scraped."
             },
-            "sourceType": {
+            "type": {
                 "type": "string",
                 "enum": ["PDF", "WEBSITE", "TEXT"],
                 "description": "Type of the source."
@@ -42,10 +54,10 @@
             }
         },
         "required": [
-            "sourceIdentifier",
-            "sourceUrl",
+            "identifier",
+            "url",
             "discoveryDateTime",
-            "sourceType"
+            "type"
         ]
     }
 }

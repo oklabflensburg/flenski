@@ -20,6 +20,7 @@ import com.flenski.service.QueueService;
 
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.QdrantGrpcClient;
+import io.qdrant.client.grpc.Collections;
 import io.qdrant.client.grpc.Collections.CreateCollection;
 import io.qdrant.client.grpc.Collections.Distance;
 import io.qdrant.client.grpc.Collections.SparseVectorConfig;
@@ -27,7 +28,6 @@ import io.qdrant.client.grpc.Collections.SparseVectorParams;
 import io.qdrant.client.grpc.Collections.VectorParams;
 import io.qdrant.client.grpc.Collections.VectorParamsMap;
 import io.qdrant.client.grpc.Collections.VectorsConfig;
-import io.qdrant.client.grpc.Collections;
 
 @RestController
 @RequestMapping("/api")
@@ -92,10 +92,10 @@ public class IndexController {
                     CompletableFuture<Void> future = indexerService.prepareDocumentForIndexing(documentDto)
                             .thenCompose(preparedDocument -> indexerService.upsert(preparedDocument))
                             .thenAccept(indexResult -> {
-                                logger.info("Indexed document: {}", documentDto.getSourceUrl());
+                                logger.info("Indexed document: {}", documentDto.getUrl());
                             })
                             .exceptionally(e -> {
-                                logger.error("Error indexing document: {}", documentDto.getSourceUrl(), e);
+                                logger.error("Error indexing document: {}", documentDto.getUrl(), e);
                                 return null;
                             });
 
@@ -103,7 +103,7 @@ public class IndexController {
 
                     //  queueService.delete(queueItem);
                 } catch (Throwable t) {
-                    logger.error("Error processing record: {}", documentDto.getSourceUrl(), t);
+                    logger.error("Error processing record: {}", documentDto.getUrl(), t);
                 }
             } catch (Throwable t) {
                 logger.error("Error processing queue item: {}", queueItem.getId(), t);

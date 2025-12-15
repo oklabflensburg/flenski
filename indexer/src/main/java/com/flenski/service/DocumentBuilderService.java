@@ -1,6 +1,5 @@
 package com.flenski.service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,10 +34,12 @@ public class DocumentBuilderService {
 
     public Document mapDocumentDtoToDocument(DocumentDto documentDto) {
         Map<String, Object> metaData = Map.of(
-            "sourceIdentifier", documentDto.getSourceIdentifier(),
-            "sourceName", documentDto.getSourceName(),
-            "sourceUrl", documentDto.getSourceUrl(),
-            "sourceType", documentDto.getSourceType().toString(),
+            "identifier", documentDto.getIdentifier(),
+            "name", documentDto.getName(),
+            "title", documentDto.getTitle(),
+            "description", documentDto.getDescription(),
+            "url", documentDto.getUrl(),
+            "type", documentDto.getType().toString(),
             "sourceDateTime", documentDto.getSourceDateTime() != null ? documentDto.getSourceDateTime().toString() : "",
             "discoveryDateTime", documentDto.getDiscoveryDateTime() != null ? documentDto.getDiscoveryDateTime().toString() : ""    
         );

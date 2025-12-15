@@ -104,15 +104,15 @@ public class PdfConverterService {
         log.debug("Creating record for URL: {}", fileUrl);
         
         DocumentDto documentDto = new DocumentDto();
-        documentDto.setSourceIdentifier(generateSourceIdentifier(fileUrl));
-        documentDto.setSourceName(extractFileNameFromUrl(fileUrl));
-        documentDto.setSourceUrl(fileUrl);
+        documentDto.setIdentifier(generateSourceIdentifier(fileUrl));
+        documentDto.setName(extractFileNameFromUrl(fileUrl));
+        documentDto.setUrl(fileUrl);
 
         //TODO: Replace with date from PDF metadata if available
         documentDto.setSourceDateTime(Instant.now()); 
         
         documentDto.setDiscoveryDateTime(Instant.now());
-        documentDto.setSourceType(SourceType.PDF);
+        documentDto.setType(SourceType.PDF);
         documentDto.setContent(extractedText);
         
         log.debug("Created record with {} characters of content", extractedText.length());

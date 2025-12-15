@@ -6,19 +6,18 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import org.apache.hc.core5.http.impl.io.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.flenski.config.VectorStoreClientConfig;
 import com.flenski.dto.DocumentDto;
 import com.flenski.type.SourceType;
 
 import io.qdrant.client.PointIdFactory;
 import io.qdrant.client.QdrantClient;
-import io.qdrant.client.QdrantGrpcClient;
 import static io.qdrant.client.ValueFactory.value;
 import io.qdrant.client.grpc.JsonWithInt.Value;
 import io.qdrant.client.grpc.Points.DenseVector;
@@ -35,6 +34,7 @@ public class IndexerService {
     private static final String SPARSE_VECTOR_NAME = "sparse";
 
     private static final Logger logger = LoggerFactory.getLogger(IndexerService.class);
+
     private final DocumentBuilderService documentBuilderService;
     private final DenseVectorService denseVectorService;
     private final SparseVectorService sparseVectorService;
@@ -47,26 +47,24 @@ public class IndexerService {
             DenseVectorService denseVectorService,
             SparseVectorService sparseVectorService,
             PdfConverterService pdfConverterService,
-            VectorService vectorService
+            VectorService vectorService,
+            VectorStoreClientConfig vectorStoreClientConfig
     ) {
         this.documentBuilderService = documentBuilderService;
         this.denseVectorService = denseVectorService;
         this.sparseVectorService = sparseVectorService;
         this.pdfConverterService = pdfConverterService;
         this.vectorService = vectorService;
-        this.client = new QdrantClient(
-                QdrantGrpcClient.newBuilder("localhost", 6334, false).build()
-        );
+        this.client = vectorStoreClientConfig.vectorStoreClient();
     }
 
     @Async
     public CompletableFuture<DocumentDto> prepareDocumentForIndexing(DocumentDto document) {
-        if (document.getSourceType() == SourceType.PDF) {
-            return pdfConverterService.convertPdfToDocument(document.getSourceUrl());
+        if (document.getType() == SourceType.PDF) {
+            return pdfConverterService.convertPdfToDocument(document.getUrl());
         }
         return CompletableFuture.completedFuture(document);
     }
-
 
     public CompletableFuture<String> upsert(DocumentDto document) {
         List<Document> documentChunks = documentBuilderService.toChunkDocuments(document);
@@ -78,12 +76,12 @@ public class IndexerService {
 
             NamedVectors namedVectors = NamedVectors.newBuilder()
                     .putAllVectors(
-                        Map.of(
-                            DENSE_VECTOR_NAME,
-                            Vector.newBuilder().setDense(denseVector).build(),
-                            SPARSE_VECTOR_NAME,
-                            Vector.newBuilder().setSparse(sparseVector).build()
-                        )
+                            Map.of(
+                                    DENSE_VECTOR_NAME,
+                                    Vector.newBuilder().setDense(denseVector).build(),
+                                    SPARSE_VECTOR_NAME,
+                                    Vector.newBuilder().setSparse(sparseVector).build()
+                            )
                     )
                     .build();
 
@@ -104,12 +102,12 @@ public class IndexerService {
 
     Map<String, Value> buildPayload(DocumentDto document, Document chunk) {
         return Map.of(
-                "source_url", value(document.getSourceUrl()),
-                "source_identifier", value(document.getSourceIdentifier() != null ? document.getSourceIdentifier() : ""),
+                "source_url", value(document.getUrl()),
+                "source_identifier", value(document.getIdentifier() != null ? document.getIdentifier() : ""),
                 "discovery_date_time", value(document.getDiscoveryDateTime() != null ? document.getDiscoveryDateTime().toString() : ""),
                 "source_date_time", value(document.getSourceDateTime() != null ? document.getSourceDateTime().toString() : ""),
                 "content", value(chunk.getText()
-            )
+                )
         );
     }
 

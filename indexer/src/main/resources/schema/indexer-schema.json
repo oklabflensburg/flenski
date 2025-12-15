@@ -6,17 +6,25 @@
     "type": "array",
     "items": {
         "type": "object",
-        "title": "Record",
+        "title": "Document",
         "properties": {
-            "sourceIdentifier": {
+            "identifier": {
                 "type": "string",
                 "description": "An identifier of the source. E.g. a filename or a title of a website."
             },
-            "sourceName": {
+            "title": {
                 "type": "string",
                 "description": "A human readable reference about the content. E.g. the main heading of the document, the name of an event."
             },
-            "sourceUrl": {
+            "description": {
+                "type": "string",
+                "description": "A short description of the content."
+            },
+            "summary": {
+                "type": "string",
+                "description": "A short summary of the content. Can be used to store a generated summary."
+            },
+            "url": {
                 "type": "string",
                 "format": "uri",
                 "description": "Full URL of the source"
@@ -31,7 +39,7 @@
                 "format": "date-time",
                 "description": "UTC format. The date and time where the source has been discovered. E.g. the datetime where a web source has been scraped."
             },
-            "sourceType": {
+            "type": {
                 "type": "string",
                 "enum": ["PDF", "Website"],
                 "description": "Type of the source."
@@ -42,10 +50,10 @@
             }
         },
         "required": [
-            "sourceIdentifier",
-            "sourceUrl",
+            "identifier",
+            "url",
             "discoveryDateTime",
-            "sourceType"
+            "type"
         ]
     }
 }

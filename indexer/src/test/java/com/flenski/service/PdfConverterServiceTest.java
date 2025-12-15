@@ -16,7 +16,7 @@ class PdfConverterServiceTest {
                 String testPdfUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
                 DocumentDto result = pdfConverterService.convertPdfToDocument(testPdfUrl).get();
                 assertNotNull(result);
-                assertEquals(testPdfUrl, result.getSourceUrl());
+                assertEquals(testPdfUrl, result.getUrl());
                 assertNotNull(result.getContent());
                 assertTrue(result.getContent().length() > 0);
             } catch (Exception e) {
