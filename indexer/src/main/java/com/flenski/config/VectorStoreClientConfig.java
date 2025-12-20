@@ -21,11 +21,22 @@ public class VectorStoreClientConfig {
     @Value("${qdrant.use-tls:false}")
     private boolean useTls;
 
+    @Value("${qdrant.collection:default}")
+    private String collectionName;
+
     @Bean
     public QdrantClient vectorStoreClient() {
 
         QdrantClient client = new QdrantClient(QdrantGrpcClient.newBuilder(host, port, useTls).build());
         return client;
     }
-    
+    public String getHost() {
+        return host;
+    }
+    public int getPort() {
+        return port;
+    }
+    public String getCollectionName() {
+        return collectionName;
+    }
 }

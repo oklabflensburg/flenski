@@ -152,6 +152,13 @@ public class DocumentDto {
     public String[] getCategories() {
         return categories;
     }
+
+    public String getCategoriesAsString() {
+        if (categories == null) {
+            return "";
+        }
+        return String.join(", ", categories);
+    }
     public void setCategories(String[] categories) {
         this.categories = categories;       
     }

@@ -41,11 +41,12 @@ public class IndexerService {
     private final PdfConverterService pdfConverterService;
     private final QdrantClient client;
     private final VectorService vectorService;
+    private final VectorStoreClientConfig vectorStoreClientConfig;
 
     public IndexerService(
             DocumentBuilderService documentBuilderService,
-            DenseVectorService denseVectorService,
-            SparseVectorService sparseVectorService,
+            DenseVectorService denseVectorService,  
+            SparseVectorService sparseVectorService,    
             PdfConverterService pdfConverterService,
             VectorService vectorService,
             VectorStoreClientConfig vectorStoreClientConfig
@@ -56,12 +57,13 @@ public class IndexerService {
         this.pdfConverterService = pdfConverterService;
         this.vectorService = vectorService;
         this.client = vectorStoreClientConfig.vectorStoreClient();
+        this.vectorStoreClientConfig = vectorStoreClientConfig;
     }
 
     @Async
     public CompletableFuture<DocumentDto> prepareDocumentForIndexing(DocumentDto document) {
         if (document.getType() == SourceType.PDF) {
-            return pdfConverterService.convertPdfToDocument(document.getUrl());
+            return pdfConverterService.convertPdfToDocument(document);
         }
         return CompletableFuture.completedFuture(document);
     }
@@ -96,22 +98,23 @@ public class IndexerService {
 
             points.add(point);
         }
-        this.client.upsertAsync("test", points);
+        this.client.upsertAsync(this.vectorStoreClientConfig.getCollectionName(), points);
         return CompletableFuture.completedFuture("ok");
     }
 
     Map<String, Value> buildPayload(DocumentDto document, Document chunk) {
-        return Map.of(
-                "url", value(document.getUrl()),
-                "identifier", value(document.getIdentifier() != null ? document.getIdentifier() : ""),
-                "title", value(document.getTitle() != null ? document.getTitle() : ""),
-                "description", value(document.getDescription() != null ? document.getDescription() : ""),
-                "summary", value(document.getSummary() != null ? document.getSummary() : ""),
-                "type", value(document.getType().toString()),
-                "discovery_date_time", value(document.getDiscoveryDateTime() != null ? document.getDiscoveryDateTime().toString() : ""),
-                "source_date_time", value(document.getSourceDateTime() != null ? document.getSourceDateTime().toString() : ""),
-                "content", value(chunk.getText()
-                )
+        return Map.ofEntries(
+            Map.entry("url", value(document.getUrl() != null ? document.getUrl() : "")),
+            Map.entry("identifier", value(document.getIdentifier() != null ? document.getIdentifier() : "")),
+            Map.entry("title", value(document.getTitle() != null ? document.getTitle() : "")),
+            Map.entry("description", value(document.getDescription() != null ? document.getDescription() : "")),
+            Map.entry("summary", value(document.getSummary() != null ? document.getSummary() : "")),
+            Map.entry("type", value(document.getType() != null ? document.getType().toString() : "")),
+            Map.entry("group", value(document.getGroup() != null ? document.getGroup() : "")),
+            Map.entry("categories", value(document.getCategoriesAsString() != null ? document.getCategoriesAsString() : "")),
+            Map.entry("discovery_date_time", value(document.getDiscoveryDateTime() != null ? document.getDiscoveryDateTime().toString() : "")),
+            Map.entry("source_date_time", value(document.getSourceDateTime() != null ? document.getSourceDateTime().toString() : "")),
+            Map.entry("content", value(chunk.getText() != null ? chunk.getText() : ""))
         );
     }
 

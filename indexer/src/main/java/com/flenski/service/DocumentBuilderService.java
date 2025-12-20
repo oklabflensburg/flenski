@@ -33,18 +33,26 @@ public class DocumentBuilderService {
     }
 
     public Document mapDocumentDtoToDocument(DocumentDto documentDto) {
+        if (documentDto == null) {
+            System.err.println("DocumentDto is null in mapDocumentDtoToDocument");
+            return null;
+        }
+    
+
         Map<String, Object> metaData = Map.of(
-            "identifier", documentDto.getIdentifier(),
-            "name", documentDto.getName(),
-            "title", documentDto.getTitle(),
-            "description", documentDto.getDescription(),
-            "url", documentDto.getUrl(),
-            "type", documentDto.getType().toString(),
+            "identifier", documentDto.getIdentifier() != null ? documentDto.getIdentifier() : "",
+            "title", documentDto.getTitle() != null ? documentDto.getTitle() : "",
+            "description", documentDto.getDescription() != null ? documentDto.getDescription() : "",
+            "summary", documentDto.getSummary() != null ? documentDto.getSummary() : "",
+            "url", documentDto.getUrl() != null ? documentDto.getUrl() : "",
+            "type", documentDto.getType() != null ? documentDto.getType().toString() : "",
             "sourceDateTime", documentDto.getSourceDateTime() != null ? documentDto.getSourceDateTime().toString() : "",
-            "discoveryDateTime", documentDto.getDiscoveryDateTime() != null ? documentDto.getDiscoveryDateTime().toString() : ""    
+            "discoveryDateTime", documentDto.getDiscoveryDateTime() != null ? documentDto.getDiscoveryDateTime().toString() : "",    
+            "group", documentDto.getGroup() != null ? documentDto.getGroup() : "",
+            "categories", documentDto.getCategoriesAsString()
         );
 
         String documentId = UUID.randomUUID().toString();
-        return new Document(documentId, documentDto.getContent(), metaData);
+        return new Document(documentId, documentDto.getContent() != null ? documentDto.getContent() : "", metaData);
     }
 }

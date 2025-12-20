@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.flenski.config.VectorStoreClientConfig;
 import com.flenski.dto.DocumentDto;
 import com.flenski.entity.QueueItem;
 import com.flenski.service.IndexerService;
@@ -23,11 +24,13 @@ import io.qdrant.client.QdrantGrpcClient;
 import io.qdrant.client.grpc.Collections;
 import io.qdrant.client.grpc.Collections.CreateCollection;
 import io.qdrant.client.grpc.Collections.Distance;
+import io.qdrant.client.grpc.Collections.PayloadSchemaType;
 import io.qdrant.client.grpc.Collections.SparseVectorConfig;
 import io.qdrant.client.grpc.Collections.SparseVectorParams;
 import io.qdrant.client.grpc.Collections.VectorParams;
 import io.qdrant.client.grpc.Collections.VectorParamsMap;
 import io.qdrant.client.grpc.Collections.VectorsConfig;
+import com.flenski.config.IndexingConfig;
 
 @RestController
 @RequestMapping("/api")
@@ -37,12 +40,16 @@ public class IndexController {
     private final QdrantClient client;
     private final QueueService queueService;
     private final IndexerService indexerService;
+    private final VectorStoreClientConfig vectorStoreClientConfig;
+    private final IndexingConfig indexingConfig;
 
-    public IndexController(QueueService queueService, IndexerService indexerService) {
+    public IndexController(QueueService queueService, IndexerService indexerService, VectorStoreClientConfig vectorStoreClientConfig, IndexingConfig indexingConfig) {
         this.queueService = queueService;
         this.indexerService = indexerService;
+        this.vectorStoreClientConfig = vectorStoreClientConfig;
+        this.indexingConfig = indexingConfig;
         this.client = new QdrantClient(
-                QdrantGrpcClient.newBuilder("localhost", 6334, false).build()
+                QdrantGrpcClient.newBuilder(vectorStoreClientConfig.getHost(), vectorStoreClientConfig.getPort(), false).build()
         );
     }
 
@@ -51,7 +58,7 @@ public class IndexController {
 
         this.client.createCollectionAsync(
                 CreateCollection.newBuilder()
-                        .setCollectionName("test")
+                        .setCollectionName(this.vectorStoreClientConfig.getCollectionName())
                         .setVectorsConfig(VectorsConfig.newBuilder().setParamsMap(
                                 VectorParamsMap.newBuilder().putAllMap(
                                         Map.of(
@@ -77,17 +84,53 @@ public class IndexController {
                         .build())
                 .get();
 
+        this.client.createPayloadIndexAsync(
+                this.vectorStoreClientConfig.getCollectionName(),
+                "categories",
+                PayloadSchemaType.Text,
+                null,
+                true,
+                null,
+                null);
+
+        this.client.createPayloadIndexAsync(
+                this.vectorStoreClientConfig.getCollectionName(),
+                "source_date_time",
+                PayloadSchemaType.Datetime,
+                null,
+                true,
+                null,
+                null);
+
+        this.client.createPayloadIndexAsync(
+                this.vectorStoreClientConfig.getCollectionName(),
+                "title",
+                PayloadSchemaType.Text,
+                null,
+                true,
+                null,
+                null);
+
+        this.client.createPayloadIndexAsync(
+                this.vectorStoreClientConfig.getCollectionName(),
+                "group",
+                PayloadSchemaType.Keyword,
+                null,
+                true,
+                null,
+                null);
+
         return ResponseEntity.ok("Collection created");
     }
 
     @PostMapping("/point")
     ResponseEntity<String> upsertPoint() {
 
-        List<QueueItem> queueItems = queueService.getNext(5);
+        List<QueueItem> queueItems = queueService.getNext(indexingConfig.getQueueBatchSize());
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (QueueItem queueItem : queueItems) {
             try {
-                DocumentDto documentDto = queueItem.getRecord();
+                DocumentDto documentDto = queueItem.getDocument();
                 try {
                     CompletableFuture<Void> future = indexerService.prepareDocumentForIndexing(documentDto)
                             .thenCompose(preparedDocument -> indexerService.upsert(preparedDocument))

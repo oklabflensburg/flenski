@@ -20,7 +20,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.flenski.dto.DocumentDto;
-import com.flenski.type.SourceType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,14 +37,15 @@ public class PdfConverterService {
     }
 
     @Async
-    public CompletableFuture<DocumentDto> convertPdfToDocument(String fileUrl) throws RuntimeException {
+    public CompletableFuture<DocumentDto> convertPdfToDocument(DocumentDto document) throws RuntimeException {
+         String fileUrl = document.getUrl();
         try {
             log.info("Starting PDF processing for URL: {}", fileUrl);
             InputStream pdfInputStream = downloadPdf(fileUrl);
             String extractedText = extractTextFromPdf(pdfInputStream);
-            DocumentDto documentDto = createDocument(fileUrl, extractedText);
+            document.setContent(extractedText);
             log.info("Successfully processed PDF from URL: {}", fileUrl);
-            return CompletableFuture.completedFuture(documentDto);
+            return CompletableFuture.completedFuture(document);
         } catch (IOException | URISyntaxException | InterruptedException e) {
             log.error("Error processing PDF from URL: {}", fileUrl, e);
             throw new RuntimeException("Failed to process PDF from URL: " + fileUrl, e);
@@ -97,40 +97,6 @@ public class PdfConverterService {
             } catch (IOException e) {
                 log.warn("Error closing PDF input stream", e);
             }
-        }
-    }
-
-    private DocumentDto createDocument(String fileUrl, String extractedText) {
-        log.debug("Creating record for URL: {}", fileUrl);
-        
-        DocumentDto documentDto = new DocumentDto();
-        documentDto.setIdentifier(generateSourceIdentifier(fileUrl));
-        documentDto.setName(extractFileNameFromUrl(fileUrl));
-        documentDto.setUrl(fileUrl);
-
-        //TODO: Replace with date from PDF metadata if available
-        documentDto.setSourceDateTime(Instant.now()); 
-        
-        documentDto.setDiscoveryDateTime(Instant.now());
-        documentDto.setType(SourceType.PDF);
-        documentDto.setContent(extractedText);
-        
-        log.debug("Created record with {} characters of content", extractedText.length());
-        return documentDto;
-    }
-
-    private String generateSourceIdentifier(String fileUrl) {
-        return "pdf_" + UUID.nameUUIDFromBytes(fileUrl.getBytes()).toString();
-    }
-
-    private String extractFileNameFromUrl(String fileUrl) {
-        try {
-            URI uri = new URI(fileUrl);
-            String path = uri.getPath();
-            return path.substring(path.lastIndexOf('/') + 1);
-        } catch (Exception e) {
-            log.warn("Could not extract filename from URL: {}", fileUrl);
-            return "unknown pdf";
         }
     }
 }
