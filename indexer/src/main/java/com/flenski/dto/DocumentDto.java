@@ -24,7 +24,6 @@ public class DocumentDto {
     @URL
     private String url;
 
-    // sourceDateTime is optional, can be null
     private Instant sourceDateTime;
 
     private String title;
@@ -32,6 +31,10 @@ public class DocumentDto {
     private String description;
 
     private String summary;
+
+    private String group;
+
+    private String[] categories;
 
     @NotNull
     private Instant discoveryDateTime;
@@ -138,5 +141,18 @@ public class DocumentDto {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+    public void setGroup(String group) {
+        this.group = group;
+    }
+    public String[] getCategories() {
+        return categories;
+    }
+    public void setCategories(String[] categories) {
+        this.categories = categories;       
     }
 }

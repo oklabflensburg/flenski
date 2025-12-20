@@ -102,8 +102,12 @@ public class IndexerService {
 
     Map<String, Value> buildPayload(DocumentDto document, Document chunk) {
         return Map.of(
-                "source_url", value(document.getUrl()),
-                "source_identifier", value(document.getIdentifier() != null ? document.getIdentifier() : ""),
+                "url", value(document.getUrl()),
+                "identifier", value(document.getIdentifier() != null ? document.getIdentifier() : ""),
+                "title", value(document.getTitle() != null ? document.getTitle() : ""),
+                "description", value(document.getDescription() != null ? document.getDescription() : ""),
+                "summary", value(document.getSummary() != null ? document.getSummary() : ""),
+                "type", value(document.getType().toString()),
                 "discovery_date_time", value(document.getDiscoveryDateTime() != null ? document.getDiscoveryDateTime().toString() : ""),
                 "source_date_time", value(document.getSourceDateTime() != null ? document.getSourceDateTime().toString() : ""),
                 "content", value(chunk.getText()

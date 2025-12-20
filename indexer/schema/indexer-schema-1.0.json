@@ -48,6 +48,17 @@
                 "enum": ["PDF", "WEBSITE", "TEXT"],
                 "description": "Type of the source."
             },
+            "categories": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Categories associated with the source."
+            },
+            "origin": {
+                "type": "string",
+                "description": "The origin of the source. E.g. Ratsversammlung."
+            },
             "content": {
                 "type": "string",
                 "description": "Text content which will be added to the knowledge base. If left empty, the indexer will try to download from the sourceUrl provided."

@@ -44,6 +44,17 @@
                 "enum": ["PDF", "Website"],
                 "description": "Type of the source."
             },
+            "group": {
+                "type": "string",
+                "description": "A group name to categorize the document. E.g. 'Ratsversammlung Protokolle'"
+            },
+            "categories": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "A list of categories or tags to further classify the document."
+            },    
             "content": {
                 "type": "string",
                 "description": "Text content which will be added to the knowledge base. If left empty, the indexer will try to download from the sourceUrl provided."
@@ -53,7 +64,8 @@
             "identifier",
             "url",
             "discoveryDateTime",
-            "type"
+            "type",
+            "group"
         ]
     }
 }
