@@ -4,7 +4,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 
+import io.qdrant.client.grpc.JsonWithInt.Value;
+import io.qdrant.client.grpc.Points;
 import org.hibernate.validator.constraints.URL;
 
 import com.flenski.type.SourceType;
@@ -161,5 +165,53 @@ public class DocumentDto {
     }
     public void setCategories(String[] categories) {
         this.categories = categories;       
+    }
+    public static DocumentDto fromScoredPoint(Points.ScoredPoint scoredPoint) {
+        Map<String, Value> payload = scoredPoint.getPayloadMap();
+        DocumentDto dto = new DocumentDto();
+        Value value;
+        value = payload.get("identifier");
+        dto.setIdentifier(value!= null ? value.getStringValue() : null);
+        value = payload.get("name");
+        dto.setName(value!= null ? value.getStringValue() : null);
+        value = payload.get("url");
+        dto.setUrl(value!= null ? value.getStringValue() : null);
+        value = payload.get("title");
+        dto.setTitle(value!= null ? value.getStringValue() : null);
+        value = payload.get("description");
+        dto.setDescription(value!= null ? value.getStringValue() : null);
+        value = payload.get("summary");
+        dto.setSummary(value!= null ? value.getStringValue() : null);
+        value = payload.get("group");
+        dto.setGroup(value!= null ? value.getStringValue() : null);
+        value = payload.get("content");
+        dto.setContent(value!= null ? value.getStringValue() : null);
+
+        value = payload.get("categories");
+        if (value != null) {
+            if (value.hasListValue()) {
+                List<Value> list = value.getListValue().getValuesList();
+                String[] categories = list.stream()
+                        .map(Value::getStringValue)
+                        .toArray(String[]::new);
+                dto.setCategories(categories);
+            } else if (!value.getStringValue().isEmpty()) {
+                dto.setCategories(new String[]{value.getStringValue()});
+            }
+        }
+
+        value = payload.get("discovery_date_time");
+        if (value!= null && !value.getStringValue().isEmpty()) {
+            dto.setDiscoveryDateTime(java.time.Instant.parse(value.getStringValue()));
+        }
+        value = payload.get("source_date_time");
+        if (value != null && !value.getStringValue().isEmpty()) {
+            dto.setSourceDateTime(java.time.Instant.parse(value.getStringValue()));
+        }
+        value = payload.get("type");
+        if (value != null && !value.getStringValue().isEmpty()) {
+            dto.setType(com.flenski.type.SourceType.valueOf(value.getStringValue()));
+        }
+        return dto;
     }
 }

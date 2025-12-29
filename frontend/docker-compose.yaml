@@ -1,0 +1,23 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flenski-frontend
+    ports:
+      - "5173:5173"
+      - "5174:5174"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true
+    networks:
+      - flenski-network
+    user: "1000:1000"
+
+networks:
+  flenski-network:
+    driver: bridge

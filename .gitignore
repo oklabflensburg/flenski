@@ -8,3 +8,7 @@ data/
 vocabulary.json
 /build/
 scripts
+.DS_Store
+.idea/
+frontend/flenski/.env.production
+frontend/flenski/.env.development

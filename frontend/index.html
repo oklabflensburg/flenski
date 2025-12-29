@@ -1,90 +1,564 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Assistant</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>flenski</title>
+    <style>
+        :root
+        {
+            --bg: #fff7ed;          /* warm sand */
+            --panel: #ffffff;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #f1d5c4;      /* warm border */
+            --shadow: 0 14px 40px rgba(31, 41, 55, 0.08);
+
+            --accent: #ea580c;      /* orange */
+            --accent2: #f59e0b;     /* amber */
+            --accentSoft: rgba(234, 88, 12, 0.12);
+
+            --radius: 18px;
+        }
+
+        * { box-sizing: border-box; }
+        body
+        {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+            color: var(--text);
+            background:
+                    radial-gradient(900px 420px at 15% -10%, #ffffff 0%, var(--bg) 55%),
+                    radial-gradient(900px 420px at 90% 0%, rgba(245, 158, 11, 0.18) 0%, transparent 55%);
+        }
+
+        a { color: inherit; }
+
+        .wrap
+        {
+            max-width: 1060px;
+            margin: 0 auto;
+            padding: 36px 18px 64px;
+        }
+
+        header
+        {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .brand
+        {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .logo
+        {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+            box-shadow: var(--shadow);
+        }
+
+        .brand h1
+        {
+            font-size: 18px;
+            margin: 0;
+            letter-spacing: 0.2px;
+        }
+
+        .brand p
+        {
+            margin: 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .pill
+        {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(241, 213, 196, 0.9);
+            background: rgba(255, 255, 255, 0.75);
+            color: var(--text);
+            font-size: 12px;
+            backdrop-filter: blur(8px);
+        }
+
+        .layout
+        {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        @media (min-width: 860px)
+        {
+            .layout { grid-template-columns: 290px 1fr; align-items: start; }
+        }
+
+        .panel
+        {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel h2
+        {
+            margin: 0 0 10px;
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 650;
+            letter-spacing: 0.2px;
+        }
+
+        label
+        {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin: 0 0 6px 2px;
+        }
+
+        input, select, button
+        {
+            width: 100%;
+            padding: 12px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(241, 213, 196, 0.95);
+            background: #fff;
+            color: var(--text);
+            outline: none;
+        }
+
+        input:focus, select:focus
+        {
+            border-color: rgba(234, 88, 12, 0.55);
+            box-shadow: 0 0 0 5px var(--accentSoft);
+        }
+
+        .filterGrid
+        {
+            display: grid;
+            gap: 12px;
+        }
+
+        .actions
+        {
+            display: grid;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .btn
+        {
+            cursor: pointer;
+            border: 1px solid rgba(234, 88, 12, 0.25);
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+            color: #fff;
+            font-weight: 650;
+        }
+
+        .btn:hover { opacity: 0.94; }
+
+        .btnGhost
+        {
+            cursor: pointer;
+            border: 1px solid rgba(234, 88, 12, 0.30);
+            background: rgba(255, 255, 255, 0.75);
+            color: var(--text);
+        }
+
+        .btnGhost:hover { background: rgba(255, 255, 255, 0.95); }
+
+        /* main area */
+        .main
+        {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .searchBar
+        {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        @media (min-width: 600px)
+        {
+            .searchBar { grid-template-columns: 1fr auto; align-items: center; }
+        }
+
+        .searchInput
+        {
+            padding: 16px 14px;
+            border-radius: 16px;
+            font-size: 16px;
+            border: 1px solid rgba(234, 88, 12, 0.25);
+            box-shadow: 0 10px 25px rgba(234, 88, 12, 0.08);
+        }
+
+        .searchBtn
+        {
+            width: auto;
+            min-width: 140px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(234, 88, 12, 0.25);
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .searchBtn:hover { opacity: 0.94; }
+
+        .summary
+        {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .results
+        {
+            display: grid;
+            gap: 10px;
+        }
+
+        .result
+        {
+            border: 1px solid rgba(241, 213, 196, 0.95);
+            border-radius: 16px;
+            padding: 14px;
+            background: #fff;
+            transition: transform 120ms ease, box-shadow 120ms ease;
+        }
+
+        .result:hover
+        {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 34px rgba(31, 41, 55, 0.08);
+        }
+
+        .resultTop
+        {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+
+        .title
+        {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.25;
+        }
+
+        .meta
+        {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .snippet
+        {
+            margin: 8px 0 0;
+            color: #374151;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .link
+        {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 13px;
+            text-decoration: none;
+            color: var(--accent);
+            border-bottom: 1px solid rgba(234, 88, 12, 0.55);
+        }
+
+        .link:hover { border-bottom-color: var(--accent); }
+
+        footer
+        {
+            margin-top: 12px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+        }
+    </style>
 </head>
+<body>
+<div class="wrap">
+    <header>
+        <div class="brand">
+            <div class="logo" aria-hidden="true"></div>
+            <div>
+                <h1>flenski</h1>
+                <p>Minimal warm search frontend</p>
+            </div>
+        </div>
+        <div class="pill" id="clock"></div>
+    </header>
 
-<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="layout">
+        <!-- LEFT FILTERS -->
+        <aside class="panel">
+            <h2>Filters</h2>
 
-  <div class="bg-white shadow-lg rounded-2xl p-6 w-full" style="width: 768px">
-    <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">Flenski</h1>
+            <div class="filterGrid">
+                <div>
+                    <label for="type">Type</label>
+                    <select id="type">
+                        <option value="all">All</option>
+                        <option value="web">Web</option>
+                        <option value="docs">Docs</option>
+                        <option value="news">News</option>
+                    </select>
+                </div>
 
-    <div>
-      <textarea id="question" placeholder="Hi!"
-        class="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                <div>
+                    <label for="dateFrom">Date from</label>
+                    <input id="dateFrom" type="date" />
+                </div>
+
+                <div>
+                    <label for="dateTo">Date to</label>
+                    <input id="dateTo" type="date" />
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn" id="applyBtn" type="button">Apply</button>
+                <button class="btnGhost" id="resetBtn" type="button">Reset</button>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main">
+            <div class="searchBar">
+                <div>
+                    <label for="q">Search</label>
+                    <input class="searchInput" id="q" type="search" placeholder="Search anything…" autocomplete="off" />
+                </div>
+                <button class="searchBtn" id="searchBtn" type="button">Search</button>
+            </div>
+
+            <div class="summary" id="summary">
+                <span class="pill">0 results</span>
+                <span class="pill">Type: All</span>
+                <span class="pill">Date: Any</span>
+            </div>
+
+            <section class="results" id="results" aria-live="polite"></section>
+
+            <footer>
+                Static demo UI — plug in your API later.
+            </footer>
+        </main>
     </div>
+</div>
 
-    <button id="askBtn" class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-      Senden
-    </button>
-
-    <div id="answer" class="mt-6 p-4 bg-gray-50 border rounded-lg text-gray-700 min-h-[80px]">
-
-    </div>
-  </div>
-
-  <script>
-    document.getElementById("askBtn").addEventListener("click", async () => {
-      const question = document.getElementById("question").value.trim();
-      const answerBox = document.getElementById("answer");
-
-      if (!question) {
-        answerBox.textContent = "Please enter a question.";
-        return;
+<script>
+  const data =
+    [
+      {
+        title: "flenski — Getting Started",
+        snippet: "Quick notes on wiring the UI to your search API (query, filters, pagination, and ranking).",
+        type: "docs",
+        date: "2025-11-03",
+        url: "#"
+      },
+      {
+        title: "Incident overview: service delays",
+        snippet: "Summary page describing recent disruptions, root causes, and mitigation steps.",
+        type: "news",
+        date: "2025-12-01",
+        url: "#"
+      },
+      {
+        title: "Minimal search UI patterns",
+        snippet: "A lightweight layout with a single input, a couple of filters, and clean results cards.",
+        type: "web",
+        date: "2024-08-19",
+        url: "#"
+      },
+      {
+        title: "API contract: /search",
+        snippet: "Example request: q, type, dateFrom, dateTo. Example response: total, items[{title,snippet,type,url,date}].",
+        type: "docs",
+        date: "2025-10-12",
+        url: "#"
       }
+    ];
 
-      answerBox.textContent = "Suche...";
+  const els =
+    {
+      q: document.getElementById("q"),
+      type: document.getElementById("type"),
+      dateFrom: document.getElementById("dateFrom"),
+      dateTo: document.getElementById("dateTo"),
+      applyBtn: document.getElementById("applyBtn"),
+      resetBtn: document.getElementById("resetBtn"),
+      searchBtn: document.getElementById("searchBtn"),
+      summary: document.getElementById("summary"),
+      results: document.getElementById("results"),
+      clock: document.getElementById("clock")
+    };
 
-      try {
+  function normalize(s)
+  {
+    return (s || "").toLowerCase().trim();
+  }
 
-        const response = await fetch(`http://localhost:8080/api/query?q=${encodeURIComponent(question)}`);
+  function matches(item, q, type, from, to)
+  {
+    const qOk =
+      (
+        !q ||
+        normalize(item.title).includes(q) ||
+        normalize(item.snippet).includes(q)
+      );
 
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
-        }
+    const typeOk = (type === "all") ? true : item.type === type;
 
-        const data = await response.json();
+    const d = new Date(item.date);
+    const fromOk = from ? (d >= new Date(from)) : true;
+    const toOk = to ? (d <= new Date(to)) : true;
 
-        let html = `<p class="mb-4 whitespace-pre-line">${data.answer}</p>`;
+    return qOk && typeOk && fromOk && toOk;
+  }
 
-        function formatDateTime(dt) {
-          if (!dt) return "-";
-          const d = new Date(dt);
-          if (isNaN(d)) return dt;
-          return d.toLocaleString("de-DE", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit"
-          });
-        }
+  function fmtDateRange(from, to)
+  {
+    if (!from && !to) { return "Any"; }
+    if (from && !to) { return `From ${from}`; }
+    if (!from && to) { return `Until ${to}`; }
+    return `${from} → ${to}`;
+  }
 
-          if (Array.isArray(data.sources)) {
-            html += `<h2 class="font-semibold mt-4 mb-2">Quellen:</h2><ul >`;
-            data.sources.forEach(src => {
-              html += `
-                <li>
-                  <div class="mb-1"><span class="font-small">Quelle:</span> <a href="${src.source_url || '#'}" target="_blank" class="text-blue-600 underline">${src.source_url || '-'}</a></div>
-                </li>`;
-            });
-            html += `</ul>`;
-          }
+  function render(items, type, from, to)
+  {
+    const total = items.length;
 
-        answerBox.innerHTML = html;
+    els.summary.innerHTML =
+      `
+        <span class="pill">${total} result${total === 1 ? "" : "s"}</span>
+        <span class="pill">Type: ${type === "all" ? "All" : type.toUpperCase()}</span>
+        <span class="pill">Date: ${fmtDateRange(from, to)}</span>
+      `;
 
+    if (total === 0)
+    {
+      els.results.innerHTML =
+        `
+          <div class="result">
+            <p class="snippet" style="margin:0;color:var(--muted);">
+              No results. Try a different query or relax the filters.
+            </p>
+          </div>
+        `;
+      return;
+    }
 
+    els.results.innerHTML = items.map((item) =>
+    {
+      return `
+          <article class="result">
+            <div class="resultTop">
+              <h3 class="title">${escapeHtml(item.title)}</h3>
+              <div class="meta">
+                <span class="pill">${item.type.toUpperCase()}</span>
+                <span>${item.date}</span>
+              </div>
+            </div>
+            <p class="snippet">${escapeHtml(item.snippet)}</p>
+            <a class="link" href="${item.url}" target="_blank" rel="noreferrer">Open</a>
+          </article>
+        `;
+    }).join("");
+  }
 
-      } catch (error) {
-        answerBox.textContent = "Error: " + error.message;
-      }
-    });
-  </script>
+  function escapeHtml(str)
+  {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function doSearch()
+  {
+    const q = normalize(els.q.value);
+    const type = els.type.value;
+    const from = els.dateFrom.value;
+    const to = els.dateTo.value;
+
+    const items = data.filter((item) => matches(item, q, type, from, to));
+    render(items, type, from, to);
+  }
+
+  function reset()
+  {
+    els.type.value = "all";
+    els.dateFrom.value = "";
+    els.dateTo.value = "";
+    els.q.value = "";
+    render([], "all", "", "");
+  }
+
+  function tick()
+  {
+    const now = new Date();
+    els.clock.textContent = now.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  }
+
+  els.searchBtn.addEventListener("click", doSearch);
+  els.applyBtn.addEventListener("click", doSearch);
+  els.resetBtn.addEventListener("click", reset);
+
+  els.q.addEventListener("keydown", (e) =>
+  {
+    if (e.key === "Enter")
+    {
+      doSearch();
+    }
+  });
+
+  tick();
+  setInterval(tick, 1000 * 30);
+  render([], "all", "", "");
+</script>
 </body>
-
 </html>
