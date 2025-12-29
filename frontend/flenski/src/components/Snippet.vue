@@ -3,8 +3,10 @@
 
     <template #title>
       <a v-if="document.url" :href="document.url" target="_blank"
-         class="text-lg text-blue-600 hover:underline">{{ document.title }}</a>
+         class="text-lg text-blue-600 hover:underline">{{ document.title }}
+      </a>
       <span v-else>{{ document.title }}</span>
+      <span v-if="document.sourceDateTime" class="text-sm">, {{ formatDate(document.sourceDateTime) }}</span>
     </template>
     <template #content>
       <div class="flex flex-col gap-y-3">
@@ -19,10 +21,10 @@
 
         </blockquote>
 
-        <div class="text-sm">{{ formatDate(document.sourceDateTime) }}</div>
         <div class="flex gap-1">
           <Tag severity="info" v-for="category in document.categories" :key="category" size="small" :value="category"  />
           <Tag v-if="document.type" size="small" :value="document.type" />
+          <Tag severity="secondary" v-if="document.group" size="small" :value="document.group" />
         </div>
       </div>
     </template>

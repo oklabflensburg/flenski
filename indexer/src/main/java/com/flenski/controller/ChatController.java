@@ -47,7 +47,7 @@ public class ChatController {
         Points.SparseVector sparseVector = sparseVectorService.embed(message);
 
         List<Points.ScoredPoint> scoredPoints = this.client.queryAsync(QueryPoints.newBuilder()
-                        .setCollectionName("flenski")
+                        .setCollectionName(vectorStoreClientConfig.getCollectionName())
                         .addPrefetch(Points.PrefetchQuery.newBuilder()
                                 .setQuery(nearest(sparseVector.getValuesList(), sparseVector.getIndicesList()))
                                 .setUsing("sparse")

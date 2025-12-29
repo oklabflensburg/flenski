@@ -57,31 +57,31 @@ public class IndexController {
     public ResponseEntity<String> createCollection() throws InterruptedException, ExecutionException {
 
         this.client.createCollectionAsync(
-                CreateCollection.newBuilder()
-                        .setCollectionName(this.vectorStoreClientConfig.getCollectionName())
-                        .setVectorsConfig(VectorsConfig.newBuilder().setParamsMap(
-                                VectorParamsMap.newBuilder().putAllMap(
-                                        Map.of(
-                                                "dense",
-                                                VectorParams.newBuilder()
-                                                        .setSize(1536)
-                                                        .setDistance(Distance.Cosine)
-                                                        .setDatatype(Collections.Datatype.Float32)
-                                                        .setHnswConfig(
-                                                                Collections.HnswConfigDiff.newBuilder()
-                                                                        .setM(24)
-                                                                        .setEfConstruct(256)
-                                                                        .setPayloadM(24)
+                        CreateCollection.newBuilder()
+                                .setCollectionName(this.vectorStoreClientConfig.getCollectionName())
+                                .setVectorsConfig(VectorsConfig.newBuilder().setParamsMap(
+                                                VectorParamsMap.newBuilder().putAllMap(
+                                                        Map.of(
+                                                                "dense",
+                                                                VectorParams.newBuilder()
+                                                                        .setSize(1536)
+                                                                        .setDistance(Distance.Cosine)
+                                                                        .setDatatype(Collections.Datatype.Float32)
+                                                                        .setHnswConfig(
+                                                                                Collections.HnswConfigDiff.newBuilder()
+                                                                                        .setM(24)
+                                                                                        .setEfConstruct(256)
+                                                                                        .setPayloadM(24)
+                                                                                        .build()
+                                                                        )
                                                                         .build()
                                                         )
-                                                        .build()
+                                                )
                                         )
                                 )
-                        )
-                        )
-                        .setSparseVectorsConfig(SparseVectorConfig.newBuilder().putMap(
-                                "sparse", SparseVectorParams.getDefaultInstance()))
-                        .build())
+                                .setSparseVectorsConfig(SparseVectorConfig.newBuilder().putMap(
+                                        "sparse", SparseVectorParams.getDefaultInstance()))
+                                .build())
                 .get();
 
         this.client.createPayloadIndexAsync(
@@ -106,10 +106,58 @@ public class IndexController {
                 this.vectorStoreClientConfig.getCollectionName(),
                 "title",
                 PayloadSchemaType.Text,
-                null,
+                Collections.PayloadIndexParams.newBuilder()
+                        .setTextIndexParams(
+                                Collections.TextIndexParams.newBuilder()
+                                        .setTokenizer(Collections.TokenizerType.Word)
+                                        .setLowercase(true)
+                                        .setMinTokenLen(2)
+                                        .setMaxTokenLen(10)
+                                        .setPhraseMatching(true)
+                                        .setAsciiFolding(true)
+                                        .setStemmer(
+                                                Collections.StemmingAlgorithm.newBuilder()
+                                                        .setSnowball(
+                                                                Collections.SnowballParams.newBuilder().setLanguage("german").build())
+                                                        .build())
+                                        .setStopwords(
+                                                Collections.StopwordsSet.newBuilder()
+                                                        .addAllLanguages(List.of("german", "english", "danish"))
+                                                        .build())
+                                        .build())
+                        .build(),
                 true,
                 null,
                 null);
+
+        this.client.createPayloadIndexAsync(
+                this.vectorStoreClientConfig.getCollectionName(),
+                "content",
+                PayloadSchemaType.Text,
+                Collections.PayloadIndexParams.newBuilder()
+                        .setTextIndexParams(
+                                Collections.TextIndexParams.newBuilder()
+                                        .setTokenizer(Collections.TokenizerType.Word)
+                                        .setLowercase(true)
+                                        .setMinTokenLen(2)
+                                        .setMaxTokenLen(10)
+                                        .setPhraseMatching(true)
+                                        .setAsciiFolding(true)
+                                        .setStemmer(
+                                                Collections.StemmingAlgorithm.newBuilder()
+                                                        .setSnowball(
+                                                                Collections.SnowballParams.newBuilder().setLanguage("german").build())
+                                                        .build())
+                                        .setStopwords(
+                                                Collections.StopwordsSet.newBuilder()
+                                                        .addAllLanguages(List.of("german", "english", "danish"))
+                                                        .build())
+                                        .build())
+                        .build(),
+                true,
+                null,
+                null);
+
 
         this.client.createPayloadIndexAsync(
                 this.vectorStoreClientConfig.getCollectionName(),
