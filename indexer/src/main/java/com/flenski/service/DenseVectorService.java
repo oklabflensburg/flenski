@@ -4,6 +4,7 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,15 +15,19 @@ public class DenseVectorService {
 
     @Autowired
     private EmbeddingModel embeddingModel;
-    
+
+    public DenseVector embed(String text) {
+        Document document = Document.builder().text(text).build();
+        return embed(document);
+    }
+
     public DenseVector embed(Document document) {
         // TODO: we can batch embed multiple documents here for better performance
-        float[] embedding =  embeddingModel.embed(document);
+        float[] embedding = embeddingModel.embed(document);
         List<Float> floatList = new ArrayList<>(embedding.length);
         for (float f : embedding) {
             floatList.add(f);
         }
-        DenseVector denseVector = DenseVector.newBuilder().addAllData(floatList).build();
-        return denseVector;
+        return DenseVector.newBuilder().addAllData(floatList).build();
     }
 }

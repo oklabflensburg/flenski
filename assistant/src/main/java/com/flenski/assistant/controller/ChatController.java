@@ -3,6 +3,8 @@ package com.flenski.assistant.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.qdrant.client.QdrantClient;
+import io.qdrant.client.QdrantGrpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -56,6 +58,18 @@ public class ChatController {
         this.compressionTransformer = compressionTransformer;
     }
 
+    public ResponseEntity<String> newQuery(@RequestParam("q") String message) {
+        QdrantClient qdrantClient =
+                new QdrantClient(
+                        QdrantGrpcClient
+                                .newBuilder("localhost", 8081, false)
+                                .build()
+                );
+
+
+        return ResponseEntity.status(200).body("ok");
+    }
+
     @GetMapping("/query")
     public ResponseEntity<ChatResponse> query(@RequestParam("q") String message) {
 
@@ -66,17 +80,17 @@ public class ChatController {
             List<SourceInfo> sourceInfos = request.search(compressedMessage);
 
             String documentsString = sourceInfos.stream()
-                .map(s -> s.getName() + " " + s.getIdentifier() + "\n " + s.getContent())
-                .collect(Collectors.joining("\n"));
-          
+                    .map(s -> s.getName() + " " + s.getIdentifier() + "\n " + s.getContent())
+                    .collect(Collectors.joining("\n"));
+
             String answer = chatClient.prompt()
-                .system(promptTemplateSpec -> promptTemplateSpec
-                .text(systemPromptTemplate)
-                .param("documents", documentsString)
-                )
-                .user(message)
-                .call()
-                .content();
+                    .system(promptTemplateSpec -> promptTemplateSpec
+                            .text(systemPromptTemplate)
+                            .param("documents", documentsString)
+                    )
+                    .user(message)
+                    .call()
+                    .content();
 
             ChatResponse response = new ChatResponse(answer, sourceInfos);
             return ResponseEntity.ok(response);
@@ -127,8 +141,8 @@ public class ChatController {
 
         String answer = chatClient.prompt()
                 .system(promptTemplateSpec -> promptTemplateSpec
-                .text(systemPromptTemplate)
-                .param("documents", documentContext)
+                        .text(systemPromptTemplate)
+                        .param("documents", documentContext)
                 )
                 .user(message)
                 .call()
