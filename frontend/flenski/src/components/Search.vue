@@ -1,37 +1,67 @@
 <script setup lang="ts">
-import {ref} from 'vue'
+import { ref } from 'vue'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import useHttp from "@/composables/useHttp.ts";
-import Snippet from './Snippet.vue';
-import type { Document } from '@/types/document';
+import Snippet from './Snippet.vue'
+import type { Document } from '@/types/document'
+import Answer from './Answer.vue'
 
 const searchTerm = ref('')
 const searchResults = ref<Document[]>([])
 const searched = ref(false)
+const isWaitingForAnswer = ref(false)
+const answer = ref('')
+
+let eventSource: EventSource | null = null
 
 function onSearch() {
-  useHttp.get('api/sparsequery', { params: { q: searchTerm.value } })
-    .then(response => {
-      searchResults.value = response.data
+  answer.value = ''
+  searchResults.value = []
+  searched.value = false
+  isWaitingForAnswer.value = true
+  if (eventSource) {
+    eventSource.close()
+  }
+  eventSource = new EventSource(`http://localhost:8081/api/hybridquery-stream?q=${encodeURIComponent(searchTerm.value)}`)
+  eventSource.addEventListener('documents', (event: MessageEvent) => {
+    try {
+      searchResults.value = JSON.parse(event.data)
       searched.value = true
-    })
-    .catch(() => {
+    } catch (e) {
       searchResults.value = []
       searched.value = true
-    })
+    }
+  })
+  eventSource.addEventListener('answer', (event: MessageEvent) => {
+    answer.value = event.data
+    isWaitingForAnswer.value = false
+    if (eventSource) {
+      eventSource.close()
+      eventSource = null
+    }
+  })
+  eventSource.onerror = () => {
+    if (eventSource) {
+      eventSource.close()
+      eventSource = null
+    }
+    searched.value = true
+    isWaitingForAnswer.value = false
+  }
 }
-
-
 </script>
 <template>
-  <div class="flex flex-col items-center justify-center gap-8 p-6 bg-white ">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-2">FlensKI Suche</h2>
+
+  <div class="flex flex-col items-center justify-center gap-8 p-6 bg-white">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-2">FlensKI</h2>
     <div class="flex w-full max-w-md gap-2">
-      <InputText v-model="searchTerm" class="flex-1" size="large"/>
-      <Button label="Suchen" icon="pi pi-search" @click="onSearch" size="large"/>
+      <InputText v-model="searchTerm" class="flex-1" size="large" />
+      <Button label="Fragen" icon="pi pi-search" @click="onSearch" size="large" />
     </div>
-    <div v-if="searchResults.length > 0" class="w-full  max-w-250 mt-2">
+    <Answer v-if="answer" :answer="answer" />
+    <ProgressSpinner v-if="isWaitingForAnswer" style="width: 40px" strokeWidth="6"/>
+    <div v-if="searchResults.length > 0" class="w-full max-w-250 mt-2">
+      <h2 class="text-lg mb-5">Quellen</h2>
       <div v-for="(document, idx) in searchResults" :key="idx">
         <Snippet :document="document" :keyword="searchTerm" />
       </div>

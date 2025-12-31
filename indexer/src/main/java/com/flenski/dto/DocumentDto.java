@@ -214,4 +214,22 @@ public class DocumentDto {
         }
         return dto;
     }
+
+    @Override
+    public String toString() {
+        return "DocumentDto{" +
+                "identifier='" + identifier + '\'' +
+                ", name='" + name + '\'' +
+                ", url='" + url + '\'' +
+                ", sourceDateTime=" + sourceDateTime +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", summary='" + summary + '\'' +
+                ", group='" + group + '\'' +
+                ", categories=" + (categories == null ? null : java.util.Arrays.toString(categories)) +
+                ", discoveryDateTime=" + discoveryDateTime +
+                ", type=" + type +
+                ", content='" + (content != null ? (content.length() > 100 ? content.substring(0, 100) + "..." : content) : null) + '\'' +
+                '}';
+    }
 }

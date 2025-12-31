@@ -192,7 +192,7 @@ public class IndexController {
 
                     futures.add(future);
 
-                    //  queueService.delete(queueItem);
+                      queueService.delete(queueItem);
                 } catch (Throwable t) {
                     logger.error("Error processing record: {}", documentDto.getUrl(), t);
                 }

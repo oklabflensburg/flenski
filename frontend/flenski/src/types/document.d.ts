@@ -1,14 +1,18 @@
 export interface Document {
-  identifier: string;
-  title?: string;
-  description?: string;
-  summary?: string;
-  url: string;
-  sourceDateTime?: string;
-  discoveryDateTime: string;
-  type: 'PDF' | 'Website';
-  group: string;
-  categories?: string[];
-  content?: string;
+  identifier: string
+  title?: string
+  description?: string
+  summary?: string
+  url: string
+  sourceDateTime?: string
+  discoveryDateTime: string
+  type: 'PDF' | 'Website'
+  group: string
+  categories?: string[]
+  content?: string
 }
 
+export interface QueryResponse {
+  documents: Document[]
+  answer: string
+}
