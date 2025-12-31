@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -171,9 +172,9 @@ public class IndexController {
         return ResponseEntity.ok("Collection created");
     }
 
-    @PostMapping("/point")
-    ResponseEntity<String> upsertPoint() {
-
+    // Runs every 10 seconds
+    @Scheduled(fixedDelay = 10000)
+    private void upsertPoint() {
         List<QueueItem> queueItems = queueService.getNext(indexingConfig.getQueueBatchSize());
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (QueueItem queueItem : queueItems) {
@@ -192,16 +193,13 @@ public class IndexController {
 
                     futures.add(future);
 
-                      queueService.delete(queueItem);
+                    queueService.delete(queueItem);
                 } catch (Throwable t) {
                     logger.error("Error processing record: {}", documentDto.getUrl(), t);
                 }
             } catch (Throwable t) {
                 logger.error("Error processing queue item: {}", queueItem.getId(), t);
             }
-
         }
-
-        return ResponseEntity.ok("ok");
     }
 }

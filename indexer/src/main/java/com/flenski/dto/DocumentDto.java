@@ -7,6 +7,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.qdrant.client.grpc.JsonWithInt.Value;
 import io.qdrant.client.grpc.Points;
 import org.hibernate.validator.constraints.URL;
@@ -16,7 +18,7 @@ import com.flenski.type.SourceType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DocumentDto {
 
     @NotBlank

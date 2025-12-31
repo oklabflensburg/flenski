@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 
 @SpringBootApplication(
@@ -15,7 +16,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @ComponentScan(basePackages = "com.flenski")
 @EnableJpaRepositories(basePackages = "com.flenski.repository")
 @EntityScan(basePackages = "com.flenski.entity")
-
+@EnableScheduling
 public class IndexerApplication {
 
 	public static void main(String[] args) {
