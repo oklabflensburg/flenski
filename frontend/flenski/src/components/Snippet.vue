@@ -64,5 +64,3 @@ function formatDate(dateString?: string): string {
     </template>
   </Card>
 </template>
-
-
