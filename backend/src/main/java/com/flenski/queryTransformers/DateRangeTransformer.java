@@ -24,6 +24,7 @@ public class DateRangeTransformer {
             Wenn relative Zeiträume gefragt werden wie letzten monat, letzte woche, gestern, heute, beziehe das auf das aktuelle datum.
             das aktuelle datum lautet: {currentDate}.   
             Wenn kein Jahr angegeben ist, ergänze das jahr in Bezug auf das aktuelle datum.
+            Das Datum liegt immer in der Vergangenheit.
             
             Gib ein JSON-Objekt zurück mit den Feldern 'startDate' und 'endDate' im RFC 3339 Format (JJJJ-MM-TT oder JJJJ-MM-TTTHH:MM:SSZ). Wenn nur ein Datum vorhanden ist, setze 'endDate' auf null. Gebe nur das reine JSON zurück, keinen weiteren Text
             

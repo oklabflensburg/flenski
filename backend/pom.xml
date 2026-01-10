@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.flenski</groupId>
-    <artifactId>indexer</artifactId>
+    <artifactId>backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>indexer</name>
     <description>Indexer for Flensburg KI</description>

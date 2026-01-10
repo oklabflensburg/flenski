@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import com.flenski.flenski.FlenskiApplication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +13,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.flenski.dto.DocumentDto;
 import com.flenski.entity.QueueItem;
-import com.flenski.indexer.IndexerApplication;
 import com.flenski.repository.QueueItemRepository;
 import com.flenski.result.QueueResult;
 import com.flenski.type.SourceType;
 
-@SpringBootTest(classes = IndexerApplication.class)
+@SpringBootTest(classes = FlenskiApplication.class)
 class QueueServiceIntegrationTest {
 
     @Autowired

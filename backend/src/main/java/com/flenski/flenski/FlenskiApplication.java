@@ -1,4 +1,4 @@
-package com.flenski.indexer;
+package com.flenski.flenski;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,9 +17,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableJpaRepositories(basePackages = "com.flenski.repository")
 @EntityScan(basePackages = "com.flenski.entity")
 @EnableScheduling
-public class IndexerApplication {
+public class FlenskiApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(IndexerApplication.class, args);
+		SpringApplication.run(FlenskiApplication.class, args);
 	}
 }

@@ -5,7 +5,7 @@ import Button from 'primevue/button'
 import Snippet from './Snippet.vue'
 import type { Document } from '@/types/document'
 import Answer from './Answer.vue'
-import DateRange from "@/components/DateRange.vue";
+import DateRange from '@/components/DateRange.vue'
 
 const searchTerm = ref('')
 const searchResults = ref<Document[]>([])
@@ -76,7 +76,13 @@ function onSearch() {
   <div class="flex flex-col items-center justify-center gap-8 p-6 bg-white">
     <h2 class="text-2xl font-semibold text-gray-800 mb-2">FlensKI</h2>
     <div class="flex w-full max-w-250 gap-1">
-      <InputText v-model="searchTerm" placeholder="was möchtest Du über Flensburg wissen?" class="flex-1" size="large" @keyup.enter="onSearch" />
+      <InputText
+        v-model="searchTerm"
+        placeholder="was möchtest Du über Flensburg wissen?"
+        class="flex-1"
+        size="large"
+        @keyup.enter="onSearch"
+      />
       <Button label="Fragen" icon="pi pi-search" @click="onSearch" size="large" />
     </div>
     <DateRange :startDate="startDate" :endDate="endDate" />

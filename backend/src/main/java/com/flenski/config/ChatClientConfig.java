@@ -17,7 +17,7 @@ public class ChatClientConfig {
     ) {
         ChatOptions chatOptions = ChatOptions.builder()
                 .model("gpt-3.5-turbo")
-                .maxTokens(400)
+                .maxTokens(800)
                 .temperature(0.1)
                 .build();
 

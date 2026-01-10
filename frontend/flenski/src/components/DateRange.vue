@@ -1,19 +1,18 @@
 <script setup lang="ts">
-
 const props = defineProps<{
   startDate: string | null
   endDate: string | null
 }>()
 
 function formatDate(dateStr: string | null): string | null {
-  if (!dateStr) return null;
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return dateStr; // Fallback falls ungültig
+  if (!dateStr) return null
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return dateStr // Fallback falls ungültig
   return date.toLocaleDateString('de-DE', {
     day: 'numeric',
     month: 'numeric',
     year: 'numeric',
-  });
+  })
 }
 </script>
 
