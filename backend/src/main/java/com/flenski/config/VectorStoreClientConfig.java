@@ -12,16 +12,16 @@ import io.qdrant.client.QdrantGrpcClient;
 @Configuration
 public class VectorStoreClientConfig {
 
-     @Value("${qdrant.host:localhost}")
+     @Value("${spring.ai.vectorstore.qdrant.host}")
     private String host;
 
-    @Value("${qdrant.port:6334}")
+    @Value("${spring.ai.vectorstore.qdrant.port}")
     private int port;
 
-    @Value("${qdrant.use-tls:false}")
+    @Value("${spring.ai.vectorstore.qdrant.useTls:false}")
     private boolean useTls;
 
-    @Value("${qdrant.collection:default}")
+    @Value("${spring.ai.vectorstore.qdrant.collection}")
     private String collectionName;
 
     @Bean

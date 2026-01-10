@@ -62,7 +62,7 @@ public class ChatController {
             DateRangeTransformer dateRangeTransformer,
             ChatClient chatClient
     ) {
-        logger.info("Initializing ChatController with host: {} and port: {}", vectorStoreClientConfig.getHost(), vectorStoreClientConfig.getPort());
+        logger.info("Initializing ChatController with host: {} and port: {} and collection: {}", vectorStoreClientConfig.getHost(), vectorStoreClientConfig.getPort(), vectorStoreClientConfig.getCollectionName());
         this.client = new QdrantClient(
                 QdrantGrpcClient.newBuilder(vectorStoreClientConfig.getHost(), vectorStoreClientConfig.getPort(), false).build()
         );
@@ -78,6 +78,7 @@ public class ChatController {
     public ResponseEntity<List<DocumentDto>> sparsequery(@RequestParam("q") String message) throws Exception {
         logger.info("Received sparsequery request with message: {}", message);
         Points.SparseVector sparseVector = sparseVectorService.embed(message);
+
 
         List<Points.ScoredPoint> scoredPoints = this.client.queryAsync(QueryPoints.newBuilder()
                         .setCollectionName(vectorStoreClientConfig.getCollectionName())
