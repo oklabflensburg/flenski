@@ -50,7 +50,10 @@ public class IndexController {
         this.vectorStoreClientConfig = vectorStoreClientConfig;
         this.indexingConfig = indexingConfig;
         this.client = new QdrantClient(
-                QdrantGrpcClient.newBuilder(vectorStoreClientConfig.getHost(), vectorStoreClientConfig.getPort(), false).build()
+                QdrantGrpcClient
+                        .newBuilder(vectorStoreClientConfig.getHost(), vectorStoreClientConfig.getPort(), false)
+                        .withApiKey(vectorStoreClientConfig.getApiKey())
+                        .build()
         );
     }
 

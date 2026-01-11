@@ -12,6 +12,8 @@ services:
       - 6335
     volumes:
       - ./data/qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY}
 
   postgres:
     image: postgres:15-alpine

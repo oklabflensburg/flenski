@@ -64,7 +64,10 @@ public class ChatController {
     ) {
         logger.info("Initializing ChatController with host: {} and port: {} and collection: {}", vectorStoreClientConfig.getHost(), vectorStoreClientConfig.getPort(), vectorStoreClientConfig.getCollectionName());
         this.client = new QdrantClient(
-                QdrantGrpcClient.newBuilder(vectorStoreClientConfig.getHost(), vectorStoreClientConfig.getPort(), false).build()
+                QdrantGrpcClient
+                        .newBuilder(vectorStoreClientConfig.getHost(), vectorStoreClientConfig.getPort(), false)
+                        .withApiKey(vectorStoreClientConfig.getApiKey())
+                        .build()
         );
         this.vectorStoreClientConfig = vectorStoreClientConfig;
         this.sparseVectorService = sparseVectorService;
@@ -103,7 +106,6 @@ public class ChatController {
             @RequestParam(value = "from", required = false) String from,
             @RequestParam(value = "to", required = false) String to
     ) throws Exception {
-
         logger.info("Received hybridquery request with message: {}", message);
         SseEmitter emitter = new SseEmitter();
         new Thread(() -> {
