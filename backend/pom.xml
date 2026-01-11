@@ -11,8 +11,8 @@
     <groupId>com.flenski</groupId>
     <artifactId>backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>indexer</name>
-    <description>Indexer for Flensburg KI</description>
+    <name>backend</name>
+    <description>FlensKi</description>
     <url/>
     <licenses>
         <license/>

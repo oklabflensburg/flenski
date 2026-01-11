@@ -9,7 +9,7 @@ import tailwindcss from '@tailwindcss/postcss'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base : '/apps/incidentmanager/frontend/public/',
+  base : '/',
   plugins: [
     vue(),
     vueDevTools(),

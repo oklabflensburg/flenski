@@ -12,18 +12,14 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Answer: typeof import('./src/components/Answer.vue')['default']
-    Button: typeof import('primevue/button')['default']
     Card: typeof import('primevue/card')['default']
-    Chip: typeof import('primevue/chip')['default']
     DateRange: typeof import('./src/components/DateRange.vue')['default']
     IconCommunity: typeof import('./src/components/icons/IconCommunity.vue')['default']
     IconDocumentation: typeof import('./src/components/icons/IconDocumentation.vue')['default']
     IconEcosystem: typeof import('./src/components/icons/IconEcosystem.vue')['default']
     IconSupport: typeof import('./src/components/icons/IconSupport.vue')['default']
     IconTooling: typeof import('./src/components/icons/IconTooling.vue')['default']
-    InputText: typeof import('primevue/inputtext')['default']
     ProgressSpinner: typeof import('primevue/progressspinner')['default']
-    ScrollPanel: typeof import('primevue/scrollpanel')['default']
     Search: typeof import('./src/components/Search.vue')['default']
     Snippet: typeof import('./src/components/Snippet.vue')['default']
     Tag: typeof import('primevue/tag')['default']
