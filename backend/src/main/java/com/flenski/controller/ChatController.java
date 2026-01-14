@@ -23,22 +23,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.google.protobuf.Timestamp;
-import io.qdrant.client.grpc.Common.DatetimeRange;
-
-import java.time.Instant;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import static io.qdrant.client.ConditionFactory.*;
 import static io.qdrant.client.QueryFactory.fusion;
 import static io.qdrant.client.QueryFactory.nearest;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/chat/")
 public class ChatController {
 
     private static final Logger logger = LoggerFactory.getLogger(ChatController.class);
@@ -111,7 +105,7 @@ public class ChatController {
         new Thread(() -> {
             try {
                 String transformedMessage = compressionTransformer.transform(message);
-                logger.debug("Transformed message: {}", transformedMessage);
+                logger.info("Transformed message: {}", transformedMessage);
 
                 DateRange dateRange;
                 if (from != null || to != null) {

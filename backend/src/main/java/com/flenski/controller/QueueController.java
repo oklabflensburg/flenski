@@ -15,7 +15,7 @@ import com.flenski.result.QueueResult;
 import com.flenski.service.QueueService;
 
 @RestController
-@RequestMapping("api")
+@RequestMapping("api/queue")
 public class QueueController {
 
     private final Logger log = LoggerFactory.getLogger(QueueController.class);

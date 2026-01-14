@@ -34,7 +34,7 @@ import io.qdrant.client.grpc.Collections.VectorsConfig;
 import com.flenski.config.IndexingConfig;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/index/")
 public class IndexController {
 
     private static final Logger logger = LoggerFactory.getLogger(IndexController.class);
