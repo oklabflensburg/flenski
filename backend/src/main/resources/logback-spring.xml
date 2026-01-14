@@ -1,48 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <property name="LOG_HOME" value="./logs"/>
-
-    <appender name="INDEXER_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/indexer.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/indexer.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
-            <maxFileSize>10MB</maxFileSize>
-        </rollingPolicy>
+    <property name="LOG_PATH" value="logs"/>
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_PATH}/application.log</file>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <appender name="QUEUE_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/queue.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/queue.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
-            <maxFileSize>10MB</maxFileSize>
-        </rollingPolicy>
+    <appender name="CHATCONTROLLER_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_PATH}/chatcontroller.log</file>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%green(%d{HH:mm:ss.SSS}) %blue(%-5level) %red([%thread]) %yellow(%logger{15}) - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <logger name="com.flenski.controller.IndexController" level="DEBUG" additivity="false">
-        <appender-ref ref="INDEXER_FILE"/>
-        <appender-ref ref="CONSOLE"/>
-    </logger>
-
-    <logger name="com.flenski.controller.QueueController" level="DEBUG" additivity="false">
-        <appender-ref ref="QUEUE_FILE"/>
-        <appender-ref ref="CONSOLE"/>
+    <logger name="com.flenski.controller" level="INFO" additivity="false">
+        <appender-ref ref="CHATCONTROLLER_FILE"/>
     </logger>
 
     <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
     </root>
 </configuration>
