@@ -175,8 +175,7 @@ public class IndexController {
         return ResponseEntity.ok("Collection created");
     }
 
-    // Runs every 10 seconds
-    @Scheduled(fixedDelay = 10000)
+    @Scheduled(fixedDelay = 1000)
     private void upsertPoint() {
         List<QueueItem> queueItems = queueService.getNext(indexingConfig.getQueueBatchSize());
         List<CompletableFuture<Void>> futures = new ArrayList<>();

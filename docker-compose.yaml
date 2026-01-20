@@ -28,6 +28,20 @@ services:
     volumes:
       - ./data/postgres_data:/var/lib/postgresql/data
 
+  node:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    container_name: node
+    working_dir: /app
+    volumes:
+      - ./scripts:/app
+      - ./data/scraped/ratsversammlung:/app/scraper/ratsversammlung/results/ratsversammlung/
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    command: sh -c "tail -f /dev/null"
+
 volumes:
   postgres_data:
-

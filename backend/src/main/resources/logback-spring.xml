@@ -14,9 +14,32 @@
         </encoder>
     </appender>
 
-    <logger name="com.flenski.controller" level="INFO" additivity="false">
+    <logger name="com.flenski.controller.chatcontroler" level="INFO" additivity="false">
         <appender-ref ref="CHATCONTROLLER_FILE"/>
     </logger>
+
+    <appender name="QUEUECONTROLLER_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_PATH}/queuecontroller.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.flenski.controller.queuecontroller" level="INFO" additivity="false">
+        <appender-ref ref="QUEUECONTROLLER_FILE"/>
+    </logger>
+
+    <appender name="INDEXCONTROLLER_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOG_PATH}/indexcontroller.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.flenski.controller.indexcontroller" level="INFO" additivity="false">
+        <appender-ref ref="INDEXCONTROLLER_FILE"/>
+    </logger>
+
 
     <root level="INFO">
         <appender-ref ref="FILE"/>
