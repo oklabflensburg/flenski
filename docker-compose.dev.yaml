@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  java:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: flenski-dev
+    working_dir: /app
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/pom.xml:/app/pom.xml
+      - ./backend/.env:/app/.env
+      - ./data:/app/data
+    ports:
+      - "8081:8081"
+      - "5005:5005"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - CORS_ALLOWED_ORIGIN=${CORS_ALLOWED_ORIGIN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SERVER_ADDRESS=${SERVER_ADDRESS}
+      - SERVER_PORT=${SERVER_PORT}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - QDRANT_HOST=${QDRANT_HOST}
+      - QDRANT_PORT=${QDRANT_PORT}
+      - QDRANT_USE_TLS=${QDRANT_USE_TLS}
+      - QDRANT_COLLECTION=${QDRANT_COLLECTION}
+      - BACKEND_API_KEY=${BACKEND_API_KEY}
+    command: ["mvn", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
+
