@@ -43,5 +43,32 @@ services:
       - NODE_ENV=development
     command: sh -c "tail -f /dev/null"
 
+  java:
+    image: eclipse-temurin:21-jdk
+    container_name: flenski
+    working_dir: /app
+    volumes:
+      - ./backend/target/backend-0.0.1-SNAPSHOT.jar:/app/app.jar
+      - ./data:/app/data
+      - ./backend/.env:/app/.env
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - CORS_ALLOWED_ORIGIN=${CORS_ALLOWED_ORIGIN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SERVER_ADDRESS=${SERVER_ADDRESS}
+      - SERVER_PORT=${SERVER_PORT}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - QDRANT_HOST=${QDRANT_HOST}
+      - QDRANT_PORT=${QDRANT_PORT}
+      - QDRANT_USE_TLS=${QDRANT_USE_TLS}
+      - QDRANT_COLLECTION=${QDRANT_COLLECTION}
+      - BACKEND_API_KEY=${BACKEND_API_KEY}
+    command: ["java", "-jar", "/app/app.jar"]
+
 volumes:
   postgres_data:
