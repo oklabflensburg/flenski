@@ -21,6 +21,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/queue/queue").authenticated()
                 .requestMatchers("/api/index/collection").authenticated()
                 .requestMatchers("/api/**").permitAll()
+                .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class);

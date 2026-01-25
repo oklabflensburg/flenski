@@ -16,9 +16,9 @@ public class IndexingConfig {
     private int queueBatchSize = 10;
 
     @Value("${flenski.indexing.documentSourceDirectoryName}")
-    private String documentSourceDirectoryName = "data/scraped/ratsversammlung";
+    private String documentSourceDirectoryName = "data/scraped/ratsversammlung/";
 
-    @Value("${flenski.indexing.docuementQueuedDirectoryName}")
+    @Value("${flenski.indexing.documentQueuedDirectoryName}")
     private String documentQueuedDirectoryName = "data/scraped/ratsversammlung/queued";
 
     public int getChunkSize() {
