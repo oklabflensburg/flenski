@@ -15,3 +15,5 @@ Build the main app:
 | 5005  | JVM Remote Debugging |
 | 6334  | Qdrant API           |
 | 6333  | Qdrant Dashboard     |
+ | 3001 | Node | 
+| 5433 | Postgres |
