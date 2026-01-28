@@ -11,6 +11,7 @@ services:
       - ./backend/pom.xml:/app/pom.xml
       - ./backend/.env:/app/.env
       - ./data:/app/data
+      - ./logs:/app/logs
     ports:
       - "8081:8081"
       - "5005:5005"
