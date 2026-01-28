@@ -14,7 +14,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.flenski.controller.chatcontroler" level="INFO" additivity="false">
+    <logger name="com.flenski.controller.ChatController" level="INFO" additivity="false">
         <appender-ref ref="CHATCONTROLLER_FILE"/>
     </logger>
 
@@ -25,7 +25,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.flenski.controller.queuecontroller" level="INFO" additivity="false">
+    <logger name="com.flenski.controller.QueueController" level="INFO" additivity="false">
         <appender-ref ref="QUEUECONTROLLER_FILE"/>
     </logger>
 
@@ -36,7 +36,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.flenski.controller.indexcontroller" level="INFO" additivity="false">
+    <logger name="com.flenski.controller.IndexController" level="INFO" additivity="false">
         <appender-ref ref="INDEXCONTROLLER_FILE"/>
     </logger>
 

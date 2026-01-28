@@ -4,7 +4,7 @@ build-frontend:
 	cd frontend; \
 	docker compose up -d; \
 	while [ "$$(docker compose ps -q app | xargs docker inspect -f '{{.State.Running}}')" != "true" ]; do \
-		echo "Warte auf Start von app-Container..."; \
+		echo "waiting to start container..."; \
 		sleep 1; \
 	done; \
 	docker compose exec app npm run build; \
