@@ -31,7 +31,7 @@ services:
   node:
     build:
       context: ./scripts
-      dockerfile: Dockerfile
+      dockerfile: ./backend/Dockerfile
     container_name: node
     working_dir: /app
     volumes:
