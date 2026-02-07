@@ -1,5 +1,6 @@
 .PHONY: build
 
+# Build the frontend and code and copy the assets to the public folder
 build-frontend:
 	cd frontend; \
 	docker compose up -d; \
@@ -10,8 +11,14 @@ build-frontend:
 	docker compose exec app npm run build; \
 	docker compose cp app:/app/flenski/dist/. ../backend/src/main/resources/static/
 
-dev:
-	docker compose -f docker-compose.yaml -f docker-compose.dev.yaml up
+# Build the backend for production use
+build:
+	docker compose build backend qdrant postgres node
 
-prod:
-	docker compose up
+# Build and run the app for production use
+run:
+	docker compose up backend qdrant postgres node
+
+# Build and run the app for dev use
+run-dev:
+	docker compose up backend qdrant postgres node

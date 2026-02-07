@@ -31,8 +31,8 @@ function onSearch() {
   if (eventSource) {
     eventSource.close()
   }
-  const backendEndpoint = import.meta.env.VITE_BACKEND_ENDPOINT;
-  const url = `${backendEndpoint.replace(/\/$/, '')}/api/chat/hybridquery-stream?q=${encodeURIComponent(searchTerm.value)}`;
+  const backendEndpoint = import.meta.env.VITE_BACKEND_ENDPOINT
+  const url = `${backendEndpoint.replace(/\/$/, '')}/api/chat/hybridquery-stream?q=${encodeURIComponent(searchTerm.value)}`
   eventSource = new EventSource(url)
   eventSource.addEventListener('documents', (event: MessageEvent) => {
     try {

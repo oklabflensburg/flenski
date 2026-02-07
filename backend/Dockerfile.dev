@@ -1,7 +1,0 @@
-FROM eclipse-temurin:21-jdk
-WORKDIR /app
-COPY pom.xml .
-RUN apt-get update && apt-get install -y maven \
-    && rm -rf /var/lib/apt/lists/*
-
-ENV PATH="/usr/share/maven/bin:${PATH}"

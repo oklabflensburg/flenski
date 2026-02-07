@@ -28,32 +28,19 @@ services:
     volumes:
       - ./data/postgres_data:/var/lib/postgresql/data
 
-  node:
+  backend-base: &backend-base
     build:
-      dockerfile: ./scripts/Dockerfile
-    container_name: node
+      context: ./backend
     working_dir: /app
     volumes:
-      - ./scripts:/app
-      - ./data/scraped/ratsversammlung:/app/scraper/ratsversammlung/results/ratsversammlung/
-    ports:
-      - "3001:3000"
-    environment:
-      - NODE_ENV=development
-    command: sh -c "tail -f /dev/null"
-
-  java:
-    image: eclipse-temurin:21-jdk
-    container_name: flenski
-    working_dir: /app
-    volumes:
-      - ./backend/target/backend-0.0.1-SNAPSHOT.jar:/app/app.jar
       - ./data:/app/data
       - ./backend/.env:/app/.env
-      - ./logs:/apps/logs
+      - ./logs:/app/logs
     ports:
       - "8081:8081"
+      - "5005:5005"
     environment:
+      - JAVA_OPTS=${JAVA_OPTS}
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:${POSTGRES_PORT}/${POSTGRES_DB}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
@@ -68,7 +55,40 @@ services:
       - QDRANT_USE_TLS=${QDRANT_USE_TLS}
       - QDRANT_COLLECTION=${QDRANT_COLLECTION}
       - BACKEND_API_KEY=${BACKEND_API_KEY}
-    command: ["java", "-jar", "/app/app.jar"]
+    command: ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+
+  backend:
+    <<: *backend-base
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+
+  run-dev:
+    <<: *backend-base
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+      - ./backend/.env:/app/.env
+      - ./logs:/app/logs
+    command: ["./mvnw", "spring-boot:run"]
+
+  node:
+    build:
+      dockerfile: ./scripts/Dockerfile
+    container_name: node
+    working_dir: /app
+    volumes:
+      - ./scripts:/app
+      - ./data/scraped/ratsversammlung:/app/scraper/ratsversammlung/results/ratsversammlung/
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+    command: sh -c "tail -f /dev/null"
 
 volumes:
   postgres_data:
