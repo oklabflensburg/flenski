@@ -56,7 +56,6 @@ services:
       - QDRANT_COLLECTION=${QDRANT_COLLECTION}
       - SPRING_SECURITY_USER_NAME=${SPRING_SECURITY_USER_NAME}
       - SPRING_SECURITY_USER_PASSWORD=${SPRING_SECURITY_USER_PASSWORD}
-      - CORS_ALLOWED_ORIGIN=${CORS_ALLOWED_ORIGIN}
     command: ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
 
   backend:
@@ -80,7 +79,8 @@ services:
 
   node:
     build:
-      dockerfile: ./scripts/Dockerfile
+      context: ./scripts
+      dockerfile: Dockerfile
     container_name: node
     working_dir: /app
     volumes:
