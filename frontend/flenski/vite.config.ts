@@ -32,7 +32,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:8081',
+        target: process.env.VITE_BACKEND_ENDPOINT || 'http://localhost:8081',
         changeOrigin: true,
         rewrite: path => path.replace(/^\/api/, '/api'),
       },
