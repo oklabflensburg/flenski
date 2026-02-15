@@ -61,6 +61,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_PORT=${POSTGRES_PORT}
+      - VOCABULARY_FILE_PATH=${VOCABULARY_FILE_PATH}
     command: ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
 
   backend:
