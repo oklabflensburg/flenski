@@ -91,7 +91,7 @@ public class IndexController {
         this.client.createPayloadIndexAsync(
                 this.vectorStoreClientConfig.getCollectionName(),
                 "categories",
-                PayloadSchemaType.Text,
+                PayloadSchemaType.Keyword,
                 null,
                 true,
                 null,

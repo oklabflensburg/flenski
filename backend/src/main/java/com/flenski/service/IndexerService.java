@@ -103,6 +103,18 @@ public class IndexerService {
     }
 
     Map<String, Value> buildPayload(DocumentDto document, Document chunk) {
+        Value categoriesValue;
+        if (document.getCategories() != null && document.getCategories().length > 0) {
+            var listBuilder = Value.newBuilder();
+            var listValueBuilder = io.qdrant.client.grpc.JsonWithInt.ListValue.newBuilder();
+            for (String cat : document.getCategories()) {
+                listValueBuilder.addValues(value(cat));
+            }
+            listBuilder.setListValue(listValueBuilder.build());
+            categoriesValue = listBuilder.build();
+        } else {
+            categoriesValue = Value.newBuilder().setListValue(io.qdrant.client.grpc.JsonWithInt.ListValue.newBuilder().build()).build();
+        }
         return Map.ofEntries(
             Map.entry("url", value(document.getUrl() != null ? document.getUrl() : "")),
             Map.entry("identifier", value(document.getIdentifier() != null ? document.getIdentifier() : "")),
@@ -111,7 +123,7 @@ public class IndexerService {
             Map.entry("summary", value(document.getSummary() != null ? document.getSummary() : "")),
             Map.entry("type", value(document.getType() != null ? document.getType().toString() : "")),
             Map.entry("group", value(document.getGroup() != null ? document.getGroup() : "")),
-            Map.entry("categories", value(document.getCategoriesAsString() != null ? document.getCategoriesAsString() : "")),
+            Map.entry("categories", categoriesValue),
             Map.entry("discovery_date_time", value(document.getDiscoveryDateTime() != null ? document.getDiscoveryDateTime().toString() : "")),
             Map.entry("source_date_time", value(document.getSourceDateTime() != null ? document.getSourceDateTime().toString() : "")),
             Map.entry("content", value(chunk.getText() != null ? chunk.getText() : ""))
