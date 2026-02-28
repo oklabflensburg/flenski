@@ -11,7 +11,7 @@ import org.springframework.web.cors.CorsConfiguration;
 @Configuration
 public class SecurityConfig {
 
-    @Value("spring.cors.allowed-origin")
+    @Value("${spring.cors.allowed-origin}")
     private String corsAllowedOrigin;
 
     @Bean
@@ -20,16 +20,17 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(request -> {
                     org.springframework.web.cors.CorsConfiguration config = new CorsConfiguration();
-                   // config.setAllowedOrigins(List.of(corsAllowedOrigin));
+                    config.setAllowedOrigins(List.of(corsAllowedOrigin));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "OPTIONS"));
                     config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
                     config.setAllowCredentials(true);
                     return config;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/chat/hybridquery-stream").permitAll()
-                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/", "/index.html", "/assets/**", "/favicon.ico", "/static/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().permitAll()
                 )
                 .httpBasic(httpBasic -> {});
         return http.build();
