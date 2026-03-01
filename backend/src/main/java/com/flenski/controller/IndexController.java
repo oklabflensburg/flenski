@@ -68,7 +68,7 @@ public class IndexController {
                                                         Map.of(
                                                                 "dense",
                                                                 VectorParams.newBuilder()
-                                                                        .setSize(1536)
+                                                                        .setSize(1024)
                                                                         .setDistance(Distance.Cosine)
                                                                         .setDatatype(Collections.Datatype.Float32)
                                                                         .setHnswConfig(

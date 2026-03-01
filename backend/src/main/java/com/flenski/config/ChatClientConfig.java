@@ -3,6 +3,8 @@ package com.flenski.config;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.ai.mistralai.MistralAiChatOptions;
+import org.springframework.ai.mistralai.api.MistralAiApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,10 +17,9 @@ public class ChatClientConfig {
     public ChatClient chatClient(
             ChatClient.Builder chatClientBuilder
     ) {
-        ChatOptions chatOptions = ChatOptions.builder()
-                .model("gpt-3.5-turbo")
-                .maxTokens(1500)
-                .temperature(0.1)
+        ChatOptions chatOptions = MistralAiChatOptions.builder()
+                .model(MistralAiApi.ChatModel.LARGE.getValue())
+                .temperature(0.5)
                 .build();
 
         return chatClientBuilder

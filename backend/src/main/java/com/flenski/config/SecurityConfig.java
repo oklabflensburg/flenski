@@ -23,14 +23,16 @@ public class SecurityConfig {
                     config.setAllowedOrigins(List.of(corsAllowedOrigin));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "OPTIONS"));
                     config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
+                    config.setExposedHeaders(List.of("Authorization", "Content-Type"));
                     config.setAllowCredentials(true);
+                    config.setMaxAge(3600L);
                     return config;
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/", "/index.html", "/assets/**", "/favicon.ico", "/static/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/chat/hybridquery-stream").permitAll()
                         .requestMatchers("/api/**").authenticated()
-                        .anyRequest().permitAll()
                 )
                 .httpBasic(httpBasic -> {});
         return http.build();

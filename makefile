@@ -19,7 +19,7 @@ build:
 
 # Build and run the app for production use
 run:
-	docker compose up backend qdrant postgres node
+	docker compose up backend qdrant postgres node --remove-orphans
 
 # Build and run the app for dev use
 run-dev:
