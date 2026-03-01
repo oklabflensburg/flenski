@@ -25,6 +25,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_URL: ${POSTGRES_URL}
     volumes:
       - ./data/postgres_data:/var/lib/postgresql/data
 
@@ -34,7 +35,7 @@ services:
     working_dir: /app
     volumes:
       - ./data:/app/data
-      - ./backend/.env:/app/.env
+      - ./backend:/app/backend
       - ./logs:/app/logs
     ports:
       - "8081:8081"
@@ -46,7 +47,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - CORS_ALLOWED_ORIGIN=${CORS_ALLOWED_ORIGIN}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
       - SERVER_ADDRESS=${SERVER_ADDRESS}
       - SERVER_PORT=${SERVER_PORT}
       - QDRANT_API_KEY=${QDRANT_API_KEY}
@@ -70,6 +71,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     command: ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+    #command: ["sh", "-c", "tail -f /dev/null"]
 
   run-dev:
     <<: *backend-base
