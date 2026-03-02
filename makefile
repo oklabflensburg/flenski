@@ -2,7 +2,6 @@
 
 # Build the frontend and code and copy the assets to the public folder
 build-frontend:
-	chown -R 1000:1000 ./frontend/flenski
 	cd frontend; \
 	docker compose up -d; \
 	while [ "$$(docker compose ps -q app | xargs docker inspect -f '{{.State.Running}}')" != "true" ]; do \
@@ -16,7 +15,6 @@ build-frontend:
 # Build the backend and frontend for production use
 build:
 	docker compose build backend qdrant postgres node
-	make build-frontend
 
 # Build and run the app for production use
 run:
