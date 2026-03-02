@@ -7,7 +7,8 @@ data/
 .env
 vocabulary.json
 /build/
-scripts
+/temp
+/scripts
 .DS_Store
 .idea/
 frontend/flenski/.env.production

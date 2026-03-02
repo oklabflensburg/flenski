@@ -10,7 +10,11 @@ build-frontend:
 	done; \
 	mkdir -p ../backend/src/main/resources/static; \
 	docker compose exec app npm run build; \
-	docker compose cp app:/app/dist/. ../backend/src/main/resources/static/
+
+copy-assets:
+	rm -Rf backend/src/main/resources/static/*
+	cp -R frontend/flenski/dist/* backend/src/main/resources/static
+
 
 # Build the backend and frontend for production use
 build:
