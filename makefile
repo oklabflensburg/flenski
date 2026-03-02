@@ -2,8 +2,8 @@
 
 # Build the frontend and code and copy the assets to the public folder
 build-frontend:
+	chown -R 1000:1000 ./frontend/flenski
 	cd frontend; \
-	chown 1000:1000 -R flenski
 	docker compose up -d; \
 	while [ "$$(docker compose ps -q app | xargs docker inspect -f '{{.State.Running}}')" != "true" ]; do \
 		echo "waiting to start container..."; \
