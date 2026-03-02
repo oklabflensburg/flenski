@@ -6,7 +6,9 @@ COPY . .
 # add bash
 RUN apk add --no-cache bash
 
-RUN chmod +x /app/install.sh
+RUN npm install
+
+RUN chown -R node:node /app
 
 USER node
 
