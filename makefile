@@ -15,7 +15,6 @@ build-frontend:
 # Build the backend and frontend for production use
 build:
 	docker compose build backend qdrant postgres node
-	make build-frontend
 
 # Build and run the app for production use
 run:
