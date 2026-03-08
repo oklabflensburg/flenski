@@ -6,17 +6,23 @@ It uses a LLM for semantical search and generating answers to user's questions.
 - Docker and Docker Compose
 - Open AI API key
 
-## Building the app
-### Environment variables
-- set up .env file, use .env-example as template
-- same for .env in frontend/flensk/.env, here the uri to the backend api needs to be updated
+## Build the frontend
+- set uri to backend api in frontend/.env file
+- run `make build-frontend`
 
-### Build the main app
+## Build for development
+In dev mode java is running directly on host machine to make integration with IDE and AI Assistants easier.
+
+- install Java JDK 25 on your host machine
+- set up .env file 
+- load .env into Environment `source .env` and/or configure it to be loaded with IDE's run config
+- build the frontend (see above)
+- `make run compile`
+- `make run-dev`
+
+### Build and run for production
 For Production:
-- run `make prod` for production build. This builds the frontend and the backend.
-- run `make run` to run the app
-
-For Development:
-- run `make dev` for development build
-- run `make build-frontent`to build the frontend
-- run `docker compose up` inside the frontend folder to build the frontend for development
+- build the frontend (see above)
+- set up .env file
+- `make build`
+- `make run`

@@ -25,7 +25,7 @@ public class VocabularyService {
     private static final Logger log = LoggerFactory.getLogger(VocabularyService.class);
 
     public VocabularyService(
-            @Value("${VOCABULARY_FILE_PATH:./vocabulary.json}") String vocabularyFilePath,
+            @Value("${vocabulary.file.path}") String vocabularyFilePath,
             FileService fileService) {
 
         this.fileService = fileService;
