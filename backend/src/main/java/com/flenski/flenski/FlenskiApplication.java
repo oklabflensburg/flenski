@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 		org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration.class
 	}
 )
-@ComponentScan(basePackages = "com.flenski")
+@ComponentScan(basePackages = {"com.flenski", "com.flenski.tools"})
 @EnableJpaRepositories(basePackages = "com.flenski.repository")
 @EntityScan(basePackages = "com.flenski.entity")
 @EnableScheduling

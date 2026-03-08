@@ -1,6 +1,4 @@
 .PHONY: build
-
-# Build the frontend and code and copy the assets to the public folder
 build-frontend:
 	cd frontend; \
 	docker compose up -d; \
@@ -8,22 +6,20 @@ build-frontend:
 		echo "waiting to start container..."; \
 		sleep 1; \
 	done; \
-	mkdir -p ../backend/src/main/resources/static; \
-	docker compose exec app npm run build; \
+	docker compose exec app npm run build;
+	cd ..;
+	rm -f backend/src/main/resources/static/*.html;
+	rm -fR backend/src/main/resources/static/assets;
+	cp -Rf frontend/flenski/dist/* backend/src/main/resources/static;
 
-copy-assets:
-	rm -Rf backend/src/main/resources/static/*
-	cp -R frontend/flenski/dist/* backend/src/main/resources/static
-
-
-# Build the backend and frontend for production use
 build:
 	docker compose build backend qdrant postgres node
 
-# Build and run the app for production use
 run:
 	docker compose up backend qdrant postgres node --remove-orphans
 
-# Build and run the app for dev use
 run-dev:
-	docker compose up backend qdrant postgres node
+	docker compose up qdrant postgres node --remove-orphans
+
+compile:
+	cd backend && ./mvnw clean compile && cd ..

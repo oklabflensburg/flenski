@@ -4,7 +4,6 @@ logs/
 notes.md
 .vscode
 data/
-.env
 vocabulary.json
 /build/
 /temp
@@ -13,3 +12,4 @@ vocabulary.json
 .idea/
 frontend/flenski/.env.production
 frontend/flenski/.env.development
+*.env

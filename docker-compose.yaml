@@ -22,16 +22,16 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_URL: ${POSTGRES_URL}
     volumes:
       - ./data/postgres_data:/var/lib/postgresql/data
 
-  backend-base: &backend-base
+  backend:
     build:
       context: ./backend
+      dockerfile: Dockerfile
     working_dir: /app
     volumes:
       - ./data:/app/data
@@ -43,7 +43,7 @@ services:
     environment:
       - JAVA_OPTS=${JAVA_OPTS}
       - SPRING_PROFILES_ACTIVE=dev
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:${POSTGRES_PORT}/${POSTGRES_DB}
+      - SPRING_DATASOURCE_URL=${POSTGRES_URL}
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       - CORS_ALLOWED_ORIGIN=${CORS_ALLOWED_ORIGIN}
@@ -58,32 +58,10 @@ services:
       - SPRING_SECURITY_USER_NAME=${SPRING_SECURITY_USER_NAME}
       - SPRING_SECURITY_USER_PASSWORD=${SPRING_SECURITY_USER_PASSWORD}
       - POSTGRES_URL=${POSTGRES_URL}
-      - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - VOCABULARY_FILE_PATH=${VOCABULARY_FILE_PATH}
-    command: ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+    command: [ "sh", "-c", "java $JAVA_OPTS -jar /app/app.jar" ]
 
-  backend:
-    <<: *backend-base
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    command: ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
-    #command: ["sh", "-c", "tail -f /dev/null"]
-
-  run-dev:
-    <<: *backend-base
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    volumes:
-      - ./backend:/app
-      - ./data:/app/data
-      - ./backend/.env:/app/.env
-      - ./logs:/app/logs
-    command: ["./mvnw", "spring-boot:run"]
 
   node:
     build:

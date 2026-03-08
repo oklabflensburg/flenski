@@ -29,10 +29,10 @@ public class SecurityConfig {
                     return config;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/", "/index.html", "/assets/**", "/favicon.ico", "/static/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/chat/hybridquery-stream").permitAll()
                         .requestMatchers("/api/**").authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/", "/index.html", "/assets/**", "/favicon.ico", "/static/**").permitAll()
                 )
                 .httpBasic(httpBasic -> {});
         return http.build();
