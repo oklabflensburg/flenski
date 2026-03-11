@@ -16,10 +16,16 @@ build:
 	docker compose build backend qdrant postgres node
 
 run:
-	docker compose up backend qdrant postgres node --remove-orphans
+	docker compose up -d backend qdrant postgres node --remove-orphans
 
 run-dev:
 	docker compose up qdrant postgres node --remove-orphans
 
 compile:
 	cd backend && ./mvnw clean compile && cd ..
+
+scrape:
+	docker compose exec node node /app/scraper/ratsversammlung/scrape.js
+
+move:
+	mv /opt/flenski/scripts/results/termine/* /opt/flenski/data/scraped/ratsversammlung/

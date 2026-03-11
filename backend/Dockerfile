@@ -9,7 +9,13 @@ FROM eclipse-temurin:21-jdk-alpine
 RUN addgroup -S spring && adduser -S spring -G spring
 WORKDIR /app
 COPY --from=build /build/target/*.jar app.jar
-RUN chown spring:spring app.jar
+
+RUN mkdir -p /app/logs
+
+RUN chown -R spring:spring /app \
+ && chmod 755 /app/logs \
+ && chmod 644 /app/app.jar
+
 USER spring:spring
 EXPOSE 8080
 ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -XX:+UseContainerSupport"
