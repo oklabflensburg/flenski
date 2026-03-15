@@ -13,3 +13,4 @@ vocabulary.json
 frontend/flenski/.env.production
 frontend/flenski/.env.development
 *.env
+node_modules
