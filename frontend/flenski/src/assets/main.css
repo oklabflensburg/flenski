@@ -36,3 +36,34 @@ html {
     'Noto Color Emoji';
   @apply font-sans;
 }
+
+/* Headings */
+h1 {
+  @apply text-3xl font-bold mt-8 mb-4;
+}
+h2 {
+  @apply text-2xl font-semibold mt-6 mb-3;
+}
+h3 {
+  @apply text-xl font-semibold mt-5 mb-2;
+}
+h4 {
+  @apply text-lg font-medium mt-4 mb-2;
+}
+h5 {
+  @apply text-base font-medium mt-3 mb-1;
+}
+h6 {
+  @apply text-sm font-medium mt-2 mb-1;
+}
+
+/* Lists */
+ul {
+  @apply list-disc pl-6 mb-4;
+}
+ol {
+  @apply list-decimal pl-6 mb-4;
+}
+li {
+  @apply mb-1;
+}

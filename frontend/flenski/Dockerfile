@@ -1,20 +1,17 @@
 FROM node:24-alpine
 
+RUN mkdir -p /app/flenski && chown -R node:node /app/flenski
+
 WORKDIR /app/flenski
 
 COPY ./package*.json ./
 
-# add bash
 RUN apk add --no-cache bash
 
 RUN npm install
 
 RUN chown -R node:node /app
 
-# Copy existing application directory permissions
-COPY --chown=www:www . /var/www
-
-# Change current user to node
 USER node
 
 EXPOSE 8080
