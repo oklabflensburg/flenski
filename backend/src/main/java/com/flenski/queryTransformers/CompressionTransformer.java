@@ -5,7 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.rag.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 
 @Service
 
@@ -40,13 +43,32 @@ public class CompressionTransformer {
 
         logger.info("CompressTransformer called.");
 
-        var compressedQueryText = this.chatClient.prompt()
-                .user(user -> user.text(this.DEFAULT_PROMPT_TEMPLATE.getTemplate())
-                .param("query", query.text()))
-                .call()
-                .content();
+        try {
+            var compressedQueryText = this.chatClient.prompt()
+                    .user(user -> user.text(this.DEFAULT_PROMPT_TEMPLATE.getTemplate())
+                    .param("query", query.text()))
+                    .call()
+                    .content();
 
-        logger.info("Transformed message to: {}", compressedQueryText);
-        return compressedQueryText;
+            if (compressedQueryText == null || compressedQueryText.isBlank()) {
+                logger.warn("Compression returned empty result, using original query.");
+                return query.text();
+            }
+
+            logger.info("Transformed message to: {}", compressedQueryText);
+            return compressedQueryText;
+        } catch (HttpClientErrorException httpException) {
+            if (httpException.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                logger.warn("Compression transformer unauthorized. Falling back to original query: {}", httpException.getMessage());
+                return query.text();
+            }
+            throw httpException;
+        } catch (RestClientException restClientException) {
+            logger.warn("Compression transformer failed due to chat client error. Using original query instead.", restClientException);
+            return query.text();
+        } catch (RuntimeException runtimeException) {
+            logger.warn("Compression transformer failed unexpectedly. Using original query instead.", runtimeException);
+            return query.text();
+        }
     }
 }

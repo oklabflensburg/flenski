@@ -19,7 +19,7 @@ public class ChatClientConfig {
     ) {
         ChatOptions chatOptions = MistralAiChatOptions.builder()
                 .model(MistralAiApi.ChatModel.LARGE.getValue())
-                .temperature(0.5)
+                .temperature(0.1)
                 .build();
 
         return chatClientBuilder

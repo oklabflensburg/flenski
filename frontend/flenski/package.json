@@ -19,6 +19,7 @@
         "@primeuix/themes": "^2.0.2",
         "autoprefixer": "^10.4.23",
         "axios": "^1.13.2",
+        "marked": "^17.0.4",
         "postcss": "^8.5.6",
         "primevue": "^4.5.4",
         "tailwindcss": "^4.2.1",

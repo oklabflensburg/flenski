@@ -9,6 +9,9 @@ import org.springframework.ai.rag.Query;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 
 @Service
 public class DateRangeTransformer {
@@ -53,15 +56,30 @@ public class DateRangeTransformer {
     public DateRange transform(Query query) {
         logger.info("DateRangeTransformer called.");
         java.time.LocalDate now = java.time.LocalDate.now();
-        String currentDate = now.toString(); // Format: YYYY-MM-DD
+        String currentDate = now.toString();
         String currentYear = String.valueOf(now.getYear());
-        var result = this.chatClient.prompt()
-                .user(user -> user.text(DateRangeTransformer.DEFAULT_PROMPT_TEMPLATE.getTemplate())
-                        .param("query", query.text())
-                        .param("currentDate", currentDate)
-                )
-                .call()
-                .content();
+        String result;
+        try {
+            result = this.chatClient.prompt()
+                    .user(user -> user.text(DateRangeTransformer.DEFAULT_PROMPT_TEMPLATE.getTemplate())
+                            .param("query", query.text())
+                            .param("currentDate", currentDate)
+                    )
+                    .call()
+                    .content();
+        } catch (HttpClientErrorException httpException) {
+            if (httpException.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                logger.warn("DateRangeTransformer unauthorized. Falling back to null range.", httpException);
+                return new DateRange(null, null);
+            }
+            throw httpException;
+        } catch (RestClientException restClientException) {
+            logger.warn("DateRangeTransformer failed due to chat client error. Returning null range.", restClientException);
+            return new DateRange(null, null);
+        } catch (RuntimeException runtimeException) {
+            logger.warn("DateRangeTransformer failed unexpectedly. Returning null range.", runtimeException);
+            return new DateRange(null, null);
+        }
         try {
             if (result == null) {
                 logger.warn("Result from chatClient was null");

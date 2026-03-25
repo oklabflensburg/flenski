@@ -50,6 +50,8 @@ public class DocumentDto {
 
     private String content;
 
+    private double score;
+
     public String createHash() {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -152,12 +154,18 @@ public class DocumentDto {
     public String getGroup() {
         return group;
     }
+
     public void setGroup(String group) {
         this.group = group;
     }
+
     public String[] getCategories() {
         return categories;
     }
+
+    public void setScore(double score) { this.score = score; }
+
+    public double getScore() { return this.score; }
 
     public String getCategoriesAsString() {
         if (categories == null) {
@@ -167,6 +175,13 @@ public class DocumentDto {
     }
     public void setCategories(String[] categories) {
         this.categories = categories;       
+    }
+
+    public static DocumentDto fromScoredPointGroup(Points.PointGroup group) {
+        if (group.getHitsCount() == 0) {
+            throw new IllegalArgumentException("PointGroup contains no hits");
+        }
+        return fromScoredPoint(group.getHits(0));
     }
     public static DocumentDto fromScoredPoint(Points.ScoredPoint scoredPoint) {
         Map<String, Value> payload = scoredPoint.getPayloadMap();
@@ -214,6 +229,8 @@ public class DocumentDto {
         if (value != null && !value.getStringValue().isEmpty()) {
             dto.setType(com.flenski.type.SourceType.valueOf(value.getStringValue()));
         }
+
+        dto.setScore(scoredPoint.getScore());
         return dto;
     }
 
