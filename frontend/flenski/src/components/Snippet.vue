@@ -60,7 +60,8 @@ function formatDate(dateString?: string): string {
           <Tag v-if="document.type" size="small" :value="document.type" />
           <Tag severity="secondary" v-if="document.group" size="small" :value="document.group" />
         </div>
+        <div>Score: {{document.score}}</div>
       </div>
-    </template>
+    </template>s
   </Card>
 </template>

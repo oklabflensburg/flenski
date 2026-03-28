@@ -87,187 +87,19 @@ public class ChatController {
         this.queryService = queryService;
     }
 
-    @GetMapping("sparsequery")
-    public ResponseEntity<List<DocumentDto>> sparsequery(
-            @RequestParam("q") String message,
-            @RequestParam(value = "minScore", required = false, defaultValue = "0.5") double minScore
-    ) throws Exception {
-        logger.info("Received sparsequery request with message: {}", message);
-        Points.SparseVector sparseVector = sparseVectorService.embed(message);
-
-
-        List<Points.ScoredPoint> scoredPoints = this.client.queryAsync(QueryPoints.newBuilder()
-                        .setCollectionName(vectorStoreClientConfig.getCollectionName())
-                        .setLimit(100)
-                        .addPrefetch(Points.PrefetchQuery.newBuilder()
-                                .setQuery(nearest(sparseVector.getValuesList(), sparseVector.getIndicesList()))
-                                .setUsing("sparse")
-                                .setLimit(100)
-                                .build())
-                        .setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build())
-                        .setQuery(fusion(Points.Fusion.RRF))
-                        .build()
-                )
-                .get();
-        scoredPoints = scoredPoints.stream()
-                .filter(point -> point.getScore() >= minScore)
-                .toList();
-        logger.info("sparsequery returned {} results above threshold {}", scoredPoints.size(), minScore);
-        List<DocumentDto> documents = scoredPoints.stream().map(DocumentDto::fromScoredPoint).toList();
-        return ResponseEntity.ok(documents);
-    }
-
-    @GetMapping("hybridquery-stream1")
-    public SseEmitter hybridqueryStream1(
-            @RequestParam("q") String message,
-            @RequestParam(value = "from", required = false) String from,
-            @RequestParam(value = "to", required = false) String to
-    ) throws Exception {
-        logger.info("Received hybridquery request with message: {}", message);
-        SseEmitter emitter = new SseEmitter();
-        new Thread(() -> {
-            try {
-                String transformedMessage = compressionTransformer.transform(message);
-                logger.info("Transformed message: {}", transformedMessage);
-
-                DateRange dateRange;
-                if (from != null || to != null) {
-                    dateRange = new DateRange(from, to);
-                } else {
-                    dateRange = dateRangeTransformer.transform(message);
-                }
-
-                Points.SparseVector sparseVector = sparseVectorService.embed(transformedMessage);
-                Points.DenseVector denseVector = denseVectorService.embed(transformedMessage);
-
-                FilterConditionBuilder filterConditionBuilder = FilterConditionBuilder.newBuilder();
-
-                if (dateRange != null && (dateRange.startDate != null || dateRange.endDate != null)) {
-                    filterConditionBuilder.setDateRange(dateRange);
-                    emitter.send(SseEmitter.event().name("dateRange").data(dateRange));
-                }
-                List<Common.Condition> filterConditions = filterConditionBuilder.build();
-
-                List<Points.ScoredPoint> scoredPoints = this.client.queryAsync(
-
-                        QueryPoints.newBuilder()
-                                .setCollectionName(vectorStoreClientConfig.getCollectionName())
-                                .setLimit(100)
-                                .setScoreThreshold(0.25f)
-                                .addPrefetch(Points.PrefetchQuery.newBuilder()
-                                        .setQuery(nearest(sparseVector.getValuesList(), sparseVector.getIndicesList()))
-                                        .setUsing("sparse")
-                                        .setLimit(100)
-                                        .setScoreThreshold(0.5f)
-                                        .build())
-                                .addPrefetch(Points.PrefetchQuery.newBuilder()
-                                        .setQuery(nearest(denseVector.getDataList()))
-                                        .setUsing("dense")
-                                        .setScoreThreshold(0.75f)
-                                        .setLimit(100)
-                                        .build())
-                                .setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build())
-                                .setQuery(fusion(Points.Fusion.RRF))
-
-/*
-                        .setQuery(
-                                formula(
-                                        Formula.newBuilder()
-                                                .setExpression(
-                                                        sum( //  the final score = score + exp_decay(target_time - x_time)
-                                                                SumExpression.newBuilder()
-                                                                        .addSum(variable("$score"))
-                                                                        .addSum(
-                                                                                expDecay(
-                                                                                        DecayParamsExpression.newBuilder()
-                                                                                                .setX(
-                                                                                                        datetimeKey("source_date_time"))  // payload key
-                                                                                                .setTarget(
-                                                                                                        datetime("YYYY-MM-DDT00:00:00Z"))  // current datetime
-                                                                                                .setMidpoint(0.5f)
-                                                                                                .setScale(86400)  // 1 day in seconds
-                                                                                                .build()))
-                                                                        .build()))
-                                                .build()))*/
-
-
-                                .setFilter(
-                                        Common.Filter.newBuilder()
-                                                .addAllMust(filterConditions)
-                                                .build())
-                                .build()
-
-
-                ).get();
-                scoredPoints = scoredPoints.stream().toList();
-                List<DocumentDto> documents = scoredPoints.stream().map(DocumentDto::fromScoredPoint).toList();
-
-                logger.info("hybridquery returned {} results ", scoredPoints.size());
-                emitter.send(SseEmitter.event().name("documents").data(documents));
-
-                final StringBuilder documentContext = new StringBuilder();
-                int maxContextDocuments = 100;
-                for (DocumentDto document : documents) {
-                    documentContext.append(document.toString());
-                    if (--maxContextDocuments <= 0) {
-                        break;
-                    }
-                }
-
-                String answer = "";
-                if (documents.size() > 0) {
-                    answer = chatClient.prompt()
-                            .system(promptTemplateSpec -> promptTemplateSpec
-                                    .text(systemPromptTemplate)
-                                    .param("documents", documentContext.toString())
-                            )
-                            .user(message)
-                            .call()
-                            .content();
-
-                    logger.info("Generated answer: {}", answer);
-                }
-                emitter.send(SseEmitter.event().name("answer").data(answer));
-                emitter.complete();
-            } catch (Exception e) {
-                emitter.completeWithError(e);
-            }
-        }).start();
-        return emitter;
-    }
 
     @GetMapping("hybridquery-stream")
-    public SseEmitter hybridqueryStream(
+    public SseEmitter sparsequeryStream(
             @RequestParam("q") String message,
             @RequestParam(value = "from", required = false) String from,
             @RequestParam(value = "to", required = false) String to
     ) throws Exception {
-        logger.info("Received hybridquery request with message: {}", message);
+        logger.info("Received sparse query request with message: {}", message);
         SseEmitter emitter = new SseEmitter();
         new Thread(() -> {
             try {
-                String transformedMessage = compressionTransformer.transform(message);
-                logger.info("Transformed message: {}", transformedMessage);
-
-                DateRange dateRange;
-                if (from != null || to != null) {
-                    dateRange = new DateRange(from, to);
-                } else {
-                    dateRange = dateRangeTransformer.transform(message);
-                }
-
-                Points.SparseVector sparseVector = sparseVectorService.embed(transformedMessage);
-                Points.DenseVector denseVector = denseVectorService.embed(transformedMessage);
-
-                FilterConditionBuilder filterConditionBuilder = FilterConditionBuilder.newBuilder();
-
-                if (dateRange != null && (dateRange.startDate != null || dateRange.endDate != null)) {
-                    filterConditionBuilder.setDateRange(dateRange);
-                    emitter.send(SseEmitter.event().name("dateRange").data(dateRange));
-                }
-                List<Common.Condition> filterConditions = filterConditionBuilder.build();
-
-                Points.QueryPoints queryPoints = queryService.buildQueryRankByDate(sparseVector, denseVector, filterConditions);
+                Points.SparseVector sparseVector = sparseVectorService.embed(message);
+                Points.QueryPoints queryPoints = queryService.buildSparseQueryTimeBoost(sparseVector);
 
                 List<Points.ScoredPoint> scoredPoints = this.client.queryAsync(queryPoints).get();
 
@@ -286,20 +118,6 @@ public class ChatController {
                     }
                 }
 
-                String answer = "";
-                if (documents.size() > 0) {
-                    answer = chatClient.prompt()
-                            .system(promptTemplateSpec -> promptTemplateSpec
-                                    .text(systemPromptTemplate)
-                                    .param("documents", documentContext.toString())
-                            )
-                            .user(message)
-                            .call()
-                            .content();
-
-                    logger.info("Generated answer: {}", answer);
-                }
-                emitter.send(SseEmitter.event().name("answer").data(answer));
                 emitter.complete();
             } catch (Exception e) {
                 emitter.completeWithError(e);

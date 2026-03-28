@@ -10,6 +10,7 @@ export interface Document {
   group: string
   categories?: string[]
   content?: string
+  score?: string
 }
 
 export interface QueryResponse {

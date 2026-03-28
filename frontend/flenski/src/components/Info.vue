@@ -37,7 +37,7 @@ function closeDialog() {
       <p>Suchanfragen und generierte Daten werden in Log-Files auf Servern in
         Deutschland gespeichert, um die Software zu verbessern und ihre Qualität
         zu analysieren.</p>
-      <p Wir nutzen ein Large Language Model des französischen Unternehmens
+      <p>Wir nutzen ein Large Language Model des französischen Unternehmens
       "Mistral", um KI-Antworten zu generieren. Suchanfragen werden an die API
       von Mistral gesendet.</p>
 

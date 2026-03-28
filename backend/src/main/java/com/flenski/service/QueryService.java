@@ -46,23 +46,70 @@ public class QueryService {
         this.denseVectorService = denseVectorService;
     }
 
+    public Points.QueryPoints buildSparseQuery(Points.SparseVector sparseVector)
+    {
+        return QueryPoints.newBuilder()
+                .setCollectionName(vectorStoreClientConfig.getCollectionName())
+                .setLimit(100)
+                .setQuery(nearest(sparseVector.getValuesList(), sparseVector.getIndicesList()))
+                .setUsing("sparse")
+                .setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build())
+                .build();
+    }
+
+
+    public Points.QueryPoints buildSparseQueryTimeBoost(Points.SparseVector sparseVector)
+    {
+        return QueryPoints.newBuilder()
+                .setCollectionName(vectorStoreClientConfig.getCollectionName())
+                .setLimit(100)
+                .addPrefetch(Points.PrefetchQuery.newBuilder()          // ← nearest goes here
+                        .setQuery(nearest(sparseVector.getValuesList(), sparseVector.getIndicesList()))
+                        .setUsing("sparse")
+                        .setLimit(100)
+                        .build())
+                .setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build())
+                .setQuery(
+                        formula(
+                                Formula.newBuilder()
+                                        .setExpression(
+                                                sum( //  the final score = score + exp_decay(target_time - x_time)
+                                                        SumExpression.newBuilder()
+                                                                .addSum(variable("$score"))
+                                                                .addSum(
+                                                                        expDecay(
+                                                                                DecayParamsExpression.newBuilder()
+                                                                                        .setX(
+                                                                                                datetimeKey("source_date_time"))  // payload key
+                                                                                        .setTarget(
+                                                                                                datetime(Instant.now().toString()))  // current datetime
+                                                                                        .setMidpoint(0.75f)
+                                                                                        .setScale(30 * 86400)  // 30 days in seconds
+                                                                                        .build()))
+                                                                .build()))
+                                        .build()))
+                .build();
+    }
+
     public QueryPoints buildQuery(Points.SparseVector sparseVector, Points.DenseVector denseVector, List<Common.Condition> filterConditions) {
         return QueryPoints.newBuilder()
                 .setCollectionName(vectorStoreClientConfig.getCollectionName())
                 .setLimit(100)
-                .setScoreThreshold(0.25f)
+                .setScoreThreshold(2f)
                 .addPrefetch(Points.PrefetchQuery.newBuilder()
                         .setQuery(nearest(sparseVector.getValuesList(), sparseVector.getIndicesList()))
                         .setUsing("sparse")
                         .setLimit(100)
                         .setScoreThreshold(0.5f)
                         .build())
+
                 .addPrefetch(Points.PrefetchQuery.newBuilder()
                         .setQuery(nearest(denseVector.getDataList()))
                         .setUsing("dense")
                         .setScoreThreshold(0.75f)
                         .setLimit(100)
                         .build())
+
                 .setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build())
                 .setQuery(fusion(Points.Fusion.RRF))
                 .setFilter(
@@ -76,19 +123,20 @@ public class QueryService {
         return Points.QueryPoints.newBuilder()
                 .setCollectionName(vectorStoreClientConfig.getCollectionName())
                 .setLimit(100)
-                .setScoreThreshold(0.1f)
+                //.setScoreThreshold(3f)
                 .addPrefetch(Points.PrefetchQuery.newBuilder()
                         .setQuery(nearest(sparseVector.getValuesList(), sparseVector.getIndicesList()))
                         .setUsing("sparse")
                         .setLimit(100)
-                        .setScoreThreshold(0.1f)
+                  //      .setScoreThreshold(3f)
                         .build())
+                /*
                 .addPrefetch(Points.PrefetchQuery.newBuilder()
                         .setQuery(nearest(denseVector.getDataList()))
                         .setUsing("dense")
-                        .setScoreThreshold(0.1f)
+                        .setScoreThreshold(3f)
                         .setLimit(100)
-                        .build())
+                        .build())*/
                 .setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build())
                 .setQuery(
                         formula(

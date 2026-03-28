@@ -69,12 +69,13 @@ public class IndexerService {
     }
 
     public CompletableFuture<String> upsert(DocumentDto document) {
+
+        SparseVector sparseVector = sparseVectorService.embed(document.getContent());
         List<Document> documentChunks = documentBuilderService.toChunkDocuments(document);
         List<PointStruct> points = new ArrayList<>();
 
         for (Document documentChunk : documentChunks) {
             DenseVector denseVector = denseVectorService.embed(documentChunk);
-            SparseVector sparseVector = sparseVectorService.embed(documentChunk.getText());
 
             NamedVectors namedVectors = NamedVectors.newBuilder()
                     .putAllVectors(
@@ -129,5 +130,4 @@ public class IndexerService {
             Map.entry("content", value(chunk.getText() != null ? chunk.getText() : ""))
         );
     }
-
 }
