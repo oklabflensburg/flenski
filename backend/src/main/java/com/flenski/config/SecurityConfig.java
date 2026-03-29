@@ -30,7 +30,7 @@ public class SecurityConfig {
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/chat/hybridquery-stream").permitAll()
+                        .requestMatchers("/api/chat/**").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/", "/index.html", "/assets/**", "/favicon.ico", "/static/**").permitAll()
                 )

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.ToString;
 
 import io.qdrant.client.grpc.JsonWithInt.Value;
 import io.qdrant.client.grpc.Points;
@@ -19,6 +20,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@ToString
 public class DocumentDto {
 
     @NotBlank
@@ -48,6 +50,7 @@ public class DocumentDto {
     @NotNull
     private SourceType type;
 
+    @ToString.Exclude
     private String content;
 
     private double score;
@@ -177,6 +180,12 @@ public class DocumentDto {
         this.categories = categories;       
     }
 
+    @ToString.Include(name = "content")
+    private String contentPreview() {
+        if (content == null) return null;
+        return content.length() > 100 ? content.substring(0, 100) + "..." : content;
+    }
+
     public static DocumentDto fromScoredPointGroup(Points.PointGroup group) {
         if (group.getHitsCount() == 0) {
             throw new IllegalArgumentException("PointGroup contains no hits");
@@ -232,23 +241,5 @@ public class DocumentDto {
 
         dto.setScore(scoredPoint.getScore());
         return dto;
-    }
-
-    @Override
-    public String toString() {
-        return "DocumentDto{" +
-                "identifier='" + identifier + '\'' +
-                ", name='" + name + '\'' +
-                ", url='" + url + '\'' +
-                ", sourceDateTime=" + sourceDateTime +
-                ", title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                ", summary='" + summary + '\'' +
-                ", group='" + group + '\'' +
-                ", categories=" + (categories == null ? null : java.util.Arrays.toString(categories)) +
-                ", discoveryDateTime=" + discoveryDateTime +
-                ", type=" + type +
-                ", content='" + (content != null ? (content.length() > 100 ? content.substring(0, 100) + "..." : content) : null) + '\'' +
-                '}';
     }
 }

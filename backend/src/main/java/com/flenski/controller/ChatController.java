@@ -1,48 +1,27 @@
 package com.flenski.controller;
 
-import com.flenski.FilterConditionBuilder;
+import com.flenski.config.QueryConfig;
 import com.flenski.config.VectorStoreClientConfig;
 import com.flenski.dto.DocumentDto;
+import com.flenski.dto.QueryParameterBag;
 import com.flenski.queryTransformers.CompressionTransformer;
 import com.flenski.queryTransformers.DateRangeTransformer;
 import com.flenski.service.DenseVectorService;
 import com.flenski.service.QueryService;
 import com.flenski.service.SparseVectorService;
-import com.flenski.value.DateRange;
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.QdrantGrpcClient;
-import io.qdrant.client.grpc.Common;
 import io.qdrant.client.grpc.Points;
-import io.qdrant.client.grpc.Points.QueryPoints;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-
-import static io.qdrant.client.QueryFactory.*;
-
-import static io.qdrant.client.ExpressionFactory.datetime;
-import static io.qdrant.client.ExpressionFactory.datetimeKey;
-import static io.qdrant.client.ExpressionFactory.expDecay;
-import static io.qdrant.client.ExpressionFactory.sum;
-import static io.qdrant.client.ExpressionFactory.variable;
-import static io.qdrant.client.QueryFactory.formula;
-import static io.qdrant.client.QueryFactory.nearest;
-
-import io.qdrant.client.grpc.Points.DecayParamsExpression;
-import io.qdrant.client.grpc.Points.Formula;
-import io.qdrant.client.grpc.Points.SumExpression;
-
 
 @RestController
 @RequestMapping("/api/chat/")
@@ -58,6 +37,7 @@ public class ChatController {
     private final DateRangeTransformer dateRangeTransformer;
     private final ChatClient chatClient;
     private final QueryService queryService;
+    private final QueryConfig queryConfig;
 
     @Value("classpath:/promptTemplates/systemPromptTemplate.st")
     Resource systemPromptTemplate;
@@ -69,7 +49,8 @@ public class ChatController {
             CompressionTransformer compressionTransformer,
             DateRangeTransformer dateRangeTransformer,
             ChatClient chatClient,
-            QueryService queryService
+            QueryService queryService,
+            QueryConfig queryConfig
     ) {
         logger.info("Initializing ChatController with host: {} and port: {} and collection: {}", vectorStoreClientConfig.getHost(), vectorStoreClientConfig.getPort(), vectorStoreClientConfig.getCollectionName());
         this.client = new QdrantClient(
@@ -85,6 +66,33 @@ public class ChatController {
         this.chatClient = chatClient;
         this.dateRangeTransformer = dateRangeTransformer;
         this.queryService = queryService;
+        this.queryConfig = queryConfig;
+    }
+
+    @PostMapping("query")
+    public SseEmitter postQuery(
+            @RequestParam(value = "q") String message,
+            @RequestBody QueryParameterBag queryParameterBag)
+            throws Exception {
+
+        logger.info("Received query: {}", message);
+        queryParameterBag.initFromConfig(queryConfig);
+        logger.info("Query parameters: {}", queryParameterBag.toString());
+
+        SseEmitter emitter = new SseEmitter();
+        new Thread(() -> {
+            try {
+                    List<DocumentDto> documents = queryService.query(client, message, queryParameterBag);
+
+                    logger.info("Query returned  {} results ", documents.size());
+                    emitter.send(SseEmitter.event().name("documents").data(documents));
+                    emitter.complete();
+
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+        }).start();
+        return emitter;
     }
 
 

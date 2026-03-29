@@ -15,6 +15,9 @@ build-frontend:
 build:
 	docker compose build backend qdrant postgres node
 
+build-backend:
+	docker compose build backend
+
 run:
 	docker compose up -d backend qdrant postgres --remove-orphans
 

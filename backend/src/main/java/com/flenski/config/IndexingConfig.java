@@ -33,6 +33,9 @@ public class IndexingConfig {
         return queueBatchSize;
     }
 
+    public static String denseVectorName = "dense";
+    public static String sparseVectorName = "sparse";
+
     public String getDocumentSourceDirectoryName() {
         return documentSourceDirectoryName;
     }

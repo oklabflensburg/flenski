@@ -6,16 +6,17 @@ import Snippet from './Snippet.vue'
 import type { Document } from '@/types/document'
 import Answer from './Answer.vue'
 import DateRange from '@/components/DateRange.vue'
+import { useSettingsStore } from '@/stores/settings'
+
+const settingsStore = useSettingsStore()
 
 const searchTerm = ref('')
 const searchResults = ref<Document[]>([])
 const searched = ref(false)
 const isWaitingForAnswer = ref(false)
-const answer = ref(`Die **Ratsversammlung** ist das zentrale politische Gremium der Stadt Flensburg. Sie trifft Entscheidungen zu wichtigen kommunalen Themen wie Haushalt, Stadtentwicklung, Kultur und Soziales. ### Wichtige Punkte zur Ratsversammlung in Flensburg: - **Zusammensetzung**: Die Ratsversammlung besteht aus gewählten Vertreter:innen der politischen Parteien und Wählergemeinschaften. Die Anzahl der Sitze richtet sich nach dem Wahlergebnis. - **Aufgaben**: - Beschlussfassung über den städtischen Haushalt. - Entscheidung über Investitionen, Satzungen und städtische Projekte. - Kontrolle der Verwaltung, z. B. durch Anfragen oder Debatten. - **Sitzungen**: Die Sitzungen sind in der Regel öffentlich und finden im Ratssaal des Flensburger Rathauses statt. Die Tagesordnung wird vorab bekanntgegeben. - **Geschäftsordnung**: Die Arbeit der Ratsversammlung folgt einer festgelegten Geschäftsordnung, die z. B. Redezeiten, Abstimmungsverfahren und die Behandlung von Anträgen regelt. - **Themenbeispiele aus den Dokumenten**: - Haushaltsfragen (z. B. über- und außerplanmäßige Ausgaben). - Krankenhausplanung oder Gesundheitsausschuss-Vorlagen. - Einwohnerfragestunden, in denen Bürger:innen direkt Fragen stellen können. Falls Sie spezifischere Informationen benötigen – etwa zu Sitzungsterminen, aktuellen Beschlüssen oder der Zusammensetzung – kann ich diese mit dem vorliegenden Material nicht sicher beantworten. Die Dokumente enthalten hierzu keine detaillierten Angaben. Für aktuelle Daten wäre ein Blick auf die offizielle Website der Stadt Flensburg ratsam.`)
+const answer = ref('')
 const startDate = ref<string | null>(null)
 const endDate = ref<string | null>(null)
-
-let eventSource: EventSource | null = null
 
 function resetValues() {
   searchResults.value = []
@@ -25,49 +26,86 @@ function resetValues() {
   startDate.value = null
   endDate.value = null
 }
-function onSearch() {
+
+async function onSearch() {
   resetValues()
   isWaitingForAnswer.value = true
-  if (eventSource) {
-    eventSource.close()
-  }
   const backendEndpoint = import.meta.env.VITE_BACKEND_ENDPOINT
-  const url = `${backendEndpoint.replace(/\/$/, '')}/api/chat/hybridquery-stream?q=${encodeURIComponent(searchTerm.value)}`
-  eventSource = new EventSource(url)
-  eventSource.addEventListener('documents', (event: MessageEvent) => {
+  const url = `${backendEndpoint.replace(/\/$/, '')}/api/chat/query?q=${encodeURIComponent(searchTerm.value)}`
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        queryMode: settingsStore.searchType.toUpperCase(),
+        enableTimeBoost: settingsStore.timeBoost,
+        fromSourceDateTime: settingsStore.fromSourceDateTime ?? null,
+        untilSourceDateTime: settingsStore.untilSourceDateTime ?? null,
+        timeBoostMidPoint: settingsStore.timeBoostMidPoint,
+        timeBoostScale: settingsStore.timeBoostScale,
+        limit: settingsStore.limit,
+        timeBoostDateField: settingsStore.timeBoostDateField || null,
+      }),
+    })
+
+    const reader = response.body!.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let eventName = ''
+    const dataLines: string[] = []
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+
+
+      for (const line of lines) {
+        if (line.startsWith('event:')) {
+          eventName = line.slice(6).trim()
+        } else if (line.startsWith('data:')) {
+          dataLines.push(line.slice(5).trim())
+        } else if (line === '') {
+          if (eventName && dataLines.length > 0) {
+            handleSseEvent(eventName, dataLines.join('\n'))
+          }
+          eventName = ''
+          dataLines.length = 0
+        }
+      }
+    }
+  } catch {
+    searchResults.value = []
+    searched.value = true
+  } finally {
+    isWaitingForAnswer.value = false
+  }
+}
+
+function handleSseEvent(eventName: string, data: string) {
+  if (eventName === 'documents') {
     try {
-      searchResults.value = JSON.parse(event.data)
+      searchResults.value = JSON.parse(data)
       searched.value = true
-    } catch (e) {
+    } catch {
       searchResults.value = []
       searched.value = true
     }
-  })
-
-  eventSource.addEventListener('dateRange', (event: MessageEvent) => {
+  } else if (eventName === 'dateRange') {
     try {
-      startDate.value = JSON.parse(event.data).startDate
-      endDate.value = JSON.parse(event.data).endDate
-    } catch (e) {
+      const parsed = JSON.parse(data)
+      startDate.value = parsed.startDate ?? null
+      endDate.value = parsed.endDate ?? null
+    } catch {
       startDate.value = null
       endDate.value = null
     }
-  })
-
-  eventSource.addEventListener('answer', (event: MessageEvent) => {
-    answer.value = event.data
-    isWaitingForAnswer.value = false
-    if (eventSource) {
-      eventSource.close()
-      eventSource = null
-    }
-  })
-  eventSource.onerror = () => {
-    if (eventSource) {
-      eventSource.close()
-      eventSource = null
-    }
-    searched.value = true
+  } else if (eventName === 'answer') {
+    answer.value = data
     isWaitingForAnswer.value = false
   }
 }
