@@ -1,13 +1,10 @@
 package com.flenski.config;
 
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.QdrantGrpcClient;
-
 
 @Configuration
 public class VectorStoreClientConfig {

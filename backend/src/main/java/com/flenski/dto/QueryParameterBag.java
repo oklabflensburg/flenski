@@ -15,13 +15,11 @@ public class QueryParameterBag
 
     private Boolean enableTimeBoost = null;
 
-    private float timeBoostMidPoint = 0f;
-
     private int timeBoostScale = 0;
 
     private int limit = 0;
 
-    private String timeBoostDateField;
+    private String collection;
 
     public enum QueryMode
     {
@@ -42,16 +40,8 @@ public class QueryParameterBag
             this.limit = queryConfig.getLimit();
         }
 
-        if (this.timeBoostMidPoint == 0f) {
-            this.timeBoostMidPoint = queryConfig.getTimeBoostMidpoint();
-        }
-
         if (this.timeBoostScale == 0) {
             this.timeBoostScale = queryConfig.getTimeBoostScale();
-        }
-
-        if (this.timeBoostDateField == null) {
-            this.timeBoostDateField = queryConfig.getTimeBoostDateField();
         }
     }
 
@@ -65,13 +55,9 @@ public class QueryParameterBag
 
     public boolean getEnableTimeBoost() { return enableTimeBoost; }
 
-    public float getTimeBoostMidPoint() { return timeBoostMidPoint; }
-
     public int getTimeBoostScale() { return timeBoostScale; }
 
-    public String getTimeBoostDateField() { return timeBoostDateField; }
-
-    public void setTimeBoostDateField(String timeBoostDateField) { this.timeBoostDateField = timeBoostDateField; }
+    public String  getCollection() { return this.collection; }
 
     public void setFromSourceDateTime(Instant fromSourceDateTime) { this.fromSourceDateTime = fromSourceDateTime; }
 
@@ -81,10 +67,10 @@ public class QueryParameterBag
 
     public void setEnableTimeBoost(Boolean enableTimeBoost) { this.enableTimeBoost = enableTimeBoost; }
 
-    public void setTimeBoostMidPoint(float timeBoostMidPoint) { this.timeBoostMidPoint = timeBoostMidPoint; }
-
     public void setTimeBoostScale(int timeBoostScale) { this.timeBoostScale = timeBoostScale; }
 
     public void setLimit(int limit) { this.limit = limit; }
+
+    public void setCollection(String collection) { this.collection = collection; }
 
 }

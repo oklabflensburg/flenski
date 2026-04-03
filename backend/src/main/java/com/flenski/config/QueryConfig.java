@@ -28,6 +28,15 @@ public class QueryConfig {
     @Value("${flenski.query.parameters.maxLimit}")
     private int maxLimit;
 
+    @Value("${flenski.query.parameters.collection}")
+    private String collection;
+
+    @Value("${spring.ai.vectorstore.qdrant.collection}")
+    private String collectionName;
+
+    @Value("${spring.ai.vectorstore.qdrant.collection-test}")
+    private String testCollectionName;
+
     public QueryParameterBag.QueryMode getQueryMode() {
         return queryMode;
     }
@@ -55,5 +64,9 @@ public class QueryConfig {
 
     public int getMaxLimit() {
         return maxLimit;
+    }
+
+    public String getCollection(String mode) {
+        return mode.equals("production") ? collectionName : testCollectionName;
     }
 }

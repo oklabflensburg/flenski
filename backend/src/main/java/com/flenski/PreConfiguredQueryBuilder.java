@@ -1,6 +1,7 @@
 package com.flenski;
 
 import com.flenski.config.IndexingConfig;
+import com.flenski.config.QueryConfig;
 import com.flenski.config.VectorStoreClientConfig;
 import com.flenski.dto.QueryParameterBag;
 import io.qdrant.client.grpc.Points;
@@ -22,6 +23,7 @@ public class PreConfiguredQueryBuilder {
 
     private Points.QueryPoints.Builder queryPointsBuilder;
     private Builder builder;
+    private QueryConfig queryConfig;
     private static final Logger logger = LoggerFactory.getLogger(PreConfiguredQueryBuilder.class);
 
 
@@ -31,6 +33,7 @@ public class PreConfiguredQueryBuilder {
 
     public PreConfiguredQueryBuilder(Builder builder) {
         this.builder = builder;
+        this.queryConfig = builder.queryConfig;
         this.init();
     }
 
@@ -57,7 +60,12 @@ public class PreConfiguredQueryBuilder {
     }
 
     private void initQueryPointsBuilder() {
-        this.queryPointsBuilder = Points.QueryPoints.newBuilder().setCollectionName(builder.vectorStoreClientConfig.getCollectionName()).setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build()).setLimit(builder.queryParameterBag.getLimit());
+
+        String collectionName = queryConfig.getCollection(builder.queryParameterBag.getCollection());
+        this.queryPointsBuilder = Points.QueryPoints.newBuilder()
+                .setCollectionName(collectionName)
+                .setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build())
+                .setLimit(builder.queryParameterBag.getLimit());
     }
 
     private void initSparseQueryBasic() {
@@ -80,11 +88,16 @@ public class PreConfiguredQueryBuilder {
         private QueryParameterBag queryParameterBag;
         private String using;
         private Points.Query timeBoostQuery;
+        private QueryConfig queryConfig;
 
 
-        public Builder(VectorStoreClientConfig vectorStoreClientConfig, QueryParameterBag queryParameterBag) {
+        public Builder(
+                VectorStoreClientConfig vectorStoreClientConfig,
+                QueryParameterBag queryParameterBag,
+                QueryConfig queryConfig) {
             this.vectorStoreClientConfig = vectorStoreClientConfig;
             this.queryParameterBag = queryParameterBag;
+            this.queryConfig = queryConfig;
         }
 
         public Builder sparseQuery(Points.SparseVector sparseVector, String sparseVectorName) {
@@ -93,7 +106,7 @@ public class PreConfiguredQueryBuilder {
             return this;
         }
 
-        public Builder timeBoostQuery(float midPoint, int scale, String dateTimeField) {
+        public Builder timeBoostQuery(int scale, float midPoint, String dateTimeField) {
             this.timeBoostQuery = formula(
                     Points.Formula.newBuilder()
                             .setExpression(

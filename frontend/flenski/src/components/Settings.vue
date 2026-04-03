@@ -18,7 +18,12 @@ const searchTypes = [
 ]
 
 const settingsStore = useSettingsStore()
-const { searchType, timeBoost, timeBoostMidPoint, timeBoostScale, limit, timeBoostDateField } = storeToRefs(settingsStore)
+const { searchType, timeBoost, timeBoostScale, limit, collection } = storeToRefs(settingsStore)
+
+const collections = [
+  { label: 'Produktion', value: 'production' },
+  { label: 'Test', value: 'test' }
+]
 
 const fromDate = computed<Date | null>({
   get: () => settingsStore.fromSourceDateTime ? new Date(settingsStore.fromSourceDateTime) : null,
@@ -29,13 +34,13 @@ const untilDate = computed<Date | null>({
   get: () => settingsStore.untilSourceDateTime ? new Date(settingsStore.untilSourceDateTime) : null,
   set: (val: Date | null) => { settingsStore.untilSourceDateTime = val ? val.toISOString() : null }
 })
+
 </script>
 
 <template>
   <Dialog :visible="visibleSettings" @update:visible="emit('update:visibleSettings', $event)" modal :dismissableMask="true" header="Einstellungen" :style="{ width: '60rem' }">
-    <form class="grid grid-cols-2 gap-6 py-2" @submit.prevent>
+    <form class="grid grid-cols-4 gap-6 py-2" @submit.prevent>
 
-      <!-- Suchmodus -->
       <div class="flex flex-col gap-2">
         <label for="searchType" class="font-medium text-gray-700">Suchmodus</label>
         <Select
@@ -46,11 +51,28 @@ const untilDate = computed<Date | null>({
           optionValue="value"
           placeholder="Suchmodus wählen"
           class="w-full"
+          size="small"
         />
-        <small class="text-gray-500">Wähle zwischen lexikaler, semantischer oder hybrider Suche.</small>
       </div>
 
-      <!-- Time Boost aktivieren -->
+      <div class="flex flex-col gap-2">
+        <label for="collection" class="font-medium text-gray-700">Collection</label>
+        <Select
+          id="collection"
+          v-model="collection"
+          :options="collections"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Collection wählen"
+          class="w-full"
+          size="small"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+      </div>
+      <div class="flex flex-col gap-2">
+      </div>
+
       <div class="flex flex-col gap-2">
         <label class="font-medium text-gray-700">Time Boost</label>
         <div class="flex items-center gap-2">
@@ -60,56 +82,35 @@ const untilDate = computed<Date | null>({
         <small class="text-gray-500">Neuere Dokumente werden bei der Suche höher gewichtet.</small>
       </div>
 
-      <!-- Time Boost Midpoint -->
-      <div class="flex flex-col gap-2">
-        <label for="timeBoostMidPoint" class="font-medium text-gray-700">Time Boost Midpoint (Tage)</label>
-        <InputNumber
-          id="timeBoostMidPoint"
-          v-model="timeBoostMidPoint"
-          :min="0"
-          :maxFractionDigits="2"
-          class="w-full"
-          placeholder="0 = Standardwert"
-        />
-        <small class="text-gray-500">Halbwertszeit des Zeitgewichtung in Tagen. 0 = Konfigurationsstandard.</small>
-      </div>
-
       <!-- Time Boost Scale -->
       <div class="flex flex-col gap-2">
         <label for="timeBoostScale" class="font-medium text-gray-700">Time Boost Scale</label>
         <InputNumber
           id="timeBoostScale"
           v-model="timeBoostScale"
-          :min="0"
           class="w-full"
           placeholder="0 = Standardwert"
+          size="small"
         />
-        <small class="text-gray-500">Skalierungsfaktor für den Time Boost. 0 = Konfigurationsstandard.</small>
+        <small class="text-gray-500">Skalierungsfaktor für den Time Boost in Tagen.</small>
       </div>
 
-      <!-- Limit -->
       <div class="flex flex-col gap-2">
-        <label for="limit" class="font-medium text-gray-700">Ergebnislimit</label>
-        <InputNumber
-          id="limit"
-          v-model="limit"
-          :min="0"
-          class="w-full"
-          placeholder="0 = Standardwert"
-        />
-        <small class="text-gray-500">Maximale Anzahl an Suchergebnissen. 0 = Konfigurationsstandard.</small>
+        <a
+          href="https://qdrant.tech/documentation/search/search-relevance/#decay-functions"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="More information about time boost (opens in new tab)"
+          class="inline-flex items-center text-blue-600 hover:text-blue-800 focus:outline-none"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="2" fill="none" />
+            <text x="10" y="15" text-anchor="middle" font-size="12" fill="currentColor" font-family="Arial, sans-serif">?</text>
+          </svg>
+        </a>
       </div>
-
-      <!-- Time Boost Date Field -->
       <div class="flex flex-col gap-2">
-        <label for="timeBoostDateField" class="font-medium text-gray-700">Time Boost Datumsfeld</label>
-        <InputText
-          id="timeBoostDateField"
-          v-model="timeBoostDateField"
-          class="w-full"
-          placeholder="leer = Standardwert"
-        />
-        <small class="text-gray-500">Name des Datumsfeldes für den Time Boost.</small>
+
       </div>
 
       <!-- Von Datum -->
@@ -124,8 +125,8 @@ const untilDate = computed<Date | null>({
           dateFormat="dd.mm.yy"
           class="w-full"
           placeholder="Kein Filter"
+          size="small"
         />
-        <small class="text-gray-500">Nur Dokumente ab diesem Datum berücksichtigen.</small>
       </div>
 
       <!-- Bis Datum -->
@@ -140,8 +141,23 @@ const untilDate = computed<Date | null>({
           dateFormat="dd.mm.yy"
           class="w-full"
           placeholder="Kein Filter"
+          size="small"
         />
         <small class="text-gray-500">Nur Dokumente bis zu diesem Datum berücksichtigen.</small>
+      </div>
+
+      <!-- Limit -->
+      <div class="flex flex-col gap-2">
+        <label for="limit" class="font-medium text-gray-700">Ergebnislimit</label>
+        <InputNumber
+          id="limit"
+          v-model="limit"
+          :min="0"
+          class="w-full"
+          placeholder="0 = Standardwert"
+          size="small"
+        />
+        <small class="text-gray-500">Maximale Anzahl an Suchergebnissen. 0 = Konfigurationsstandard.</small>
       </div>
 
     </form>

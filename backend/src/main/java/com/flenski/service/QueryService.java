@@ -2,6 +2,7 @@ package com.flenski.service;
 
 import com.flenski.PreConfiguredQueryBuilder;
 import com.flenski.config.IndexingConfig;
+import com.flenski.config.QueryConfig;
 import com.flenski.dto.DocumentDto;
 import com.flenski.dto.QueryParameterBag;
 import io.qdrant.client.QdrantClient;
@@ -27,11 +28,15 @@ import static io.qdrant.client.QueryFactory.fusion;
 
 import com.flenski.config.VectorStoreClientConfig;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 @Service
 public class QueryService {
+
+    private static final Logger logger = LoggerFactory.getLogger(QueryService.class);
 
     private VectorStoreClientConfig vectorStoreClientConfig;
     private SparseVectorService sparseVectorService;
@@ -48,12 +53,12 @@ public class QueryService {
         this.denseVectorService = denseVectorService;
     }
 
-    public List<DocumentDto> query(QdrantClient client, String message, QueryParameterBag queryParameterBag) throws Exception {
+    public List<DocumentDto> query(QdrantClient client, String message, QueryParameterBag queryParameterBag, QueryConfig queryConfig) throws Exception {
         Points.SparseVector sparseVector = sparseVectorService.embed(message);
 
-        QueryPoints queryPoints = new PreConfiguredQueryBuilder.Builder(vectorStoreClientConfig, queryParameterBag)
+        QueryPoints queryPoints = new PreConfiguredQueryBuilder.Builder(vectorStoreClientConfig, queryParameterBag, queryConfig)
                 .sparseQuery(sparseVector, IndexingConfig.sparseVectorName)
-                .timeBoostQuery(queryParameterBag.getTimeBoostMidPoint(), queryParameterBag.getTimeBoostScale(), queryParameterBag.getTimeBoostDateField())
+                .timeBoostQuery(queryParameterBag.getTimeBoostScale(), queryConfig.getTimeBoostMidpoint(), queryConfig.getTimeBoostDateField())
                 .build()
                 .build();
 
@@ -80,40 +85,7 @@ public class QueryService {
         return nearest(sparseVector.getValuesList(), sparseVector.getIndicesList());
     }
 
-    private QueryPoints.Builder setSparseQueryTimeBoostEnabled(QueryPoints.Builder builder, Points.SparseVector sparseVector, QueryParameterBag parameterBag) {
-        return builder
-                .addPrefetch(
-                        Points.PrefetchQuery.newBuilder()
-                                .setQuery(buildNearesSparseQuery(sparseVector))
-                                .setUsing(IndexingConfig.sparseVectorName)
-                                .setLimit(parameterBag.getLimit())
-                                .build()
-                )
-                .setQuery(buildTimeBoostQuery());
-    }
 
-
-    private Points.Query buildTimeBoostQuery() {
-        return formula(
-                Formula.newBuilder()
-                        .setExpression(
-                                sum( //  the final score = score + exp_decay(target_time - x_time)
-                                        SumExpression.newBuilder()
-                                                .addSum(variable("$score"))
-                                                .addSum(
-                                                        expDecay(
-                                                                DecayParamsExpression.newBuilder()
-                                                                        .setX(
-                                                                                datetimeKey("source_date_time"))  // payload key
-                                                                        .setTarget(
-                                                                                datetime(Instant.now().toString()))  // current datetime
-                                                                        .setMidpoint(0.75f)
-                                                                        .setScale(30 * 86400)  // 30 days in seconds
-                                                                        .build()))
-                                                .build()))
-                        .build());
-
-    }
 
     public Points.QueryPoints buildSparseQuery(Points.SparseVector sparseVector) {
         return QueryPoints.newBuilder()
@@ -122,39 +94,6 @@ public class QueryService {
                 .setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build())
                 .setQuery(nearest(sparseVector.getValuesList(), sparseVector.getIndicesList()))
                 .setUsing("sparse")
-                .build();
-    }
-
-
-    public Points.QueryPoints buildSparseQueryTimeBoost(Points.SparseVector sparseVector) {
-        return QueryPoints.newBuilder()
-                .setCollectionName(vectorStoreClientConfig.getCollectionName())
-                .setLimit(100)
-                .setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build())
-                .addPrefetch(Points.PrefetchQuery.newBuilder()          // ← nearest goes here
-                        .setQuery(nearest(sparseVector.getValuesList(), sparseVector.getIndicesList()))
-                        .setUsing("sparse")
-                        .setLimit(100)
-                        .build())
-                .setQuery(
-                        formula(
-                                Formula.newBuilder()
-                                        .setExpression(
-                                                sum( //  the final score = score + exp_decay(target_time - x_time)
-                                                        SumExpression.newBuilder()
-                                                                .addSum(variable("$score"))
-                                                                .addSum(
-                                                                        expDecay(
-                                                                                DecayParamsExpression.newBuilder()
-                                                                                        .setX(
-                                                                                                datetimeKey("source_date_time"))  // payload key
-                                                                                        .setTarget(
-                                                                                                datetime(Instant.now().toString()))  // current datetime
-                                                                                        .setMidpoint(0.75f)
-                                                                                        .setScale(30 * 86400)  // 30 days in seconds
-                                                                                        .build()))
-                                                                .build()))
-                                        .build()))
                 .build();
     }
 

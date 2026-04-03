@@ -82,51 +82,12 @@ public class ChatController {
         SseEmitter emitter = new SseEmitter();
         new Thread(() -> {
             try {
-                    List<DocumentDto> documents = queryService.query(client, message, queryParameterBag);
+                    List<DocumentDto> documents = queryService.query(client, message, queryParameterBag, queryConfig);
 
                     logger.info("Query returned  {} results ", documents.size());
                     emitter.send(SseEmitter.event().name("documents").data(documents));
                     emitter.complete();
 
-            } catch (Exception e) {
-                emitter.completeWithError(e);
-            }
-        }).start();
-        return emitter;
-    }
-
-
-    @GetMapping("hybridquery-stream")
-    public SseEmitter sparsequeryStream(
-            @RequestParam("q") String message,
-            @RequestParam(value = "from", required = false) String from,
-            @RequestParam(value = "to", required = false) String to
-    ) throws Exception {
-        logger.info("Received sparse query request with message: {}", message);
-        SseEmitter emitter = new SseEmitter();
-        new Thread(() -> {
-            try {
-                Points.SparseVector sparseVector = sparseVectorService.embed(message);
-                Points.QueryPoints queryPoints = queryService.buildSparseQueryTimeBoost(sparseVector);
-
-                List<Points.ScoredPoint> scoredPoints = this.client.queryAsync(queryPoints).get();
-
-                scoredPoints = scoredPoints.stream().toList();
-                List<DocumentDto> documents = scoredPoints.stream().map(DocumentDto::fromScoredPoint).toList();
-
-                logger.info("hybridquery returned {} results ", scoredPoints.size());
-                emitter.send(SseEmitter.event().name("documents").data(documents));
-
-                final StringBuilder documentContext = new StringBuilder();
-                int maxContextDocuments = 100;
-                for (DocumentDto document : documents) {
-                    documentContext.append(document.toString());
-                    if (--maxContextDocuments <= 0) {
-                        break;
-                    }
-                }
-
-                emitter.complete();
             } catch (Exception e) {
                 emitter.completeWithError(e);
             }

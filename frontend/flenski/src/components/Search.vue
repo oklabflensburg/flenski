@@ -42,10 +42,9 @@ async function onSearch() {
         enableTimeBoost: settingsStore.timeBoost,
         fromSourceDateTime: settingsStore.fromSourceDateTime ?? null,
         untilSourceDateTime: settingsStore.untilSourceDateTime ?? null,
-        timeBoostMidPoint: settingsStore.timeBoostMidPoint,
-        timeBoostScale: settingsStore.timeBoostScale,
+        timeBoostScale: settingsStore.timeBoostScale ?? 0,
         limit: settingsStore.limit,
-        timeBoostDateField: settingsStore.timeBoostDateField || null,
+        collection: settingsStore.collection || null,
       }),
     })
 

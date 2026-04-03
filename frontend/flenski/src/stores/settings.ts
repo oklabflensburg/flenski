@@ -6,20 +6,18 @@ export const useSettingsStore = defineStore('settings', () => {
   const timeBoost = ref<boolean>(false)
   const fromSourceDateTime = ref<string | null>(null)
   const untilSourceDateTime = ref<string | null>(null)
-  const timeBoostMidPoint = ref<number>(0)
   const timeBoostScale = ref<number>(0)
   const limit = ref<number>(0)
-  const timeBoostDateField = ref<string>('')
+  const collection = ref<string>('production')
 
   return {
     searchType,
     timeBoost,
     fromSourceDateTime,
     untilSourceDateTime,
-    timeBoostMidPoint,
     timeBoostScale,
     limit,
-    timeBoostDateField,
+    collection,
   }
 }, {
   persist: true,
