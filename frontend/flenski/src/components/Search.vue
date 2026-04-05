@@ -45,6 +45,8 @@ async function onSearch() {
         timeBoostScale: settingsStore.timeBoostScale ?? 0,
         limit: settingsStore.limit,
         collection: settingsStore.collection || null,
+        enableTitleBoost: settingsStore.titleBoost || false,
+        titleBoostFactor: settingsStore.titleBoostFactor || 0
       }),
     })
 

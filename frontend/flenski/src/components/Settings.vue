@@ -18,7 +18,7 @@ const searchTypes = [
 ]
 
 const settingsStore = useSettingsStore()
-const { searchType, timeBoost, timeBoostScale, limit, collection } = storeToRefs(settingsStore)
+const { searchType, timeBoost, timeBoostScale, limit, collection, titleBoost, titleBoostFactor } = storeToRefs(settingsStore)
 
 const collections = [
   { label: 'Produktion', value: 'production' },
@@ -94,7 +94,6 @@ const untilDate = computed<Date | null>({
         />
         <small class="text-gray-500">Skalierungsfaktor für den Time Boost in Tagen.</small>
       </div>
-
       <div class="flex flex-col gap-2">
         <a
           href="https://qdrant.tech/documentation/search/search-relevance/#decay-functions"
@@ -109,6 +108,32 @@ const untilDate = computed<Date | null>({
           </svg>
         </a>
       </div>
+      <div class="flex flex-col gap-2"></div>
+
+
+      <div class="flex flex-col gap-2">
+        <label class="font-medium text-gray-700">Title Boost</label>
+        <div class="flex items-center gap-2">
+          <Checkbox inputId="titleBoost" v-model="titleBoost" :binary="true" />
+          <label for="titleBoost" class="cursor-pointer">Title Boost aktivieren</label>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="timeBoostScale" class="font-medium text-gray-700">Title Boost Faktor</label>
+        <InputNumber
+          id="titleBoostScale"
+          v-model="titleBoostFactor"
+          class="w-full"
+          placeholder="0 = Standardwert"
+          size="small"
+          :minFractionDigits="1" :maxFractionDigits="1"
+        />
+
+      </div>
+      <div class="flex flex-col gap-2"></div>
+
+
       <div class="flex flex-col gap-2">
 
       </div>

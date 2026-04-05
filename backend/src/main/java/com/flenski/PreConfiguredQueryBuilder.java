@@ -9,7 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.List;
 
+import static io.qdrant.client.ConditionFactory.matchText;
 import static io.qdrant.client.ExpressionFactory.*;
 import static io.qdrant.client.ExpressionFactory.datetime;
 import static io.qdrant.client.ExpressionFactory.datetimeKey;
@@ -106,13 +108,17 @@ public class PreConfiguredQueryBuilder {
             return this;
         }
 
-        public Builder timeBoostQuery(int scale, float midPoint, String dateTimeField) {
+
+        public Builder timeBoostQuery(int scale, float midPoint, String dateTimeField, String query) {
+
+
             this.timeBoostQuery = formula(
                     Points.Formula.newBuilder()
                             .setExpression(
-                                    sum( //  the final score = score + exp_decay(target_time - x_time)
+                                    sum(
                                             Points.SumExpression.newBuilder()
                                                     .addSum(variable("$score"))
+                                                    /*
                                                     .addSum(
                                                             expDecay(
                                                                     Points.DecayParamsExpression.newBuilder()
@@ -122,11 +128,27 @@ public class PreConfiguredQueryBuilder {
                                                                                     datetime(Instant.now().toString()))  // current datetime
                                                                             .setMidpoint(midPoint)
                                                                             .setScale(scale * 86400)
-                                                                            .build()))
-                                                    .build()))
+                                                                            .build()
+                                                            )
+                                                    )*/
+                                                    /*
+                                                    .addSum(
+                                                            mult(
+                                                                    Points.MultExpression.newBuilder()
+                                                                            .addMult(constant(200f))
+                                                                            .addMult(
+                                                                                    condition(
+                                                                                            matchText(
+                                                                                                    "title",
+                                                                                                    query)))
+                                                                            .build())) */
+                                                    .build()
+                                    )
+                            )
                             .build());
             return this;
         }
+
 
         public Builder nearestSparseQuery(Points.SparseVector sparseVector) {
             this.nearestSparseQuery = nearest(sparseVector.getValuesList(), sparseVector.getIndicesList());

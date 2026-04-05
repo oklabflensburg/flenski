@@ -1,6 +1,7 @@
 package com.flenski.dto;
 
 import java.time.Instant;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.flenski.config.QueryConfig;
 import lombok.ToString;
 
@@ -16,6 +17,10 @@ public class QueryParameterBag
     private Boolean enableTimeBoost = null;
 
     private int timeBoostScale = 0;
+
+    private Boolean enableTitleBoost = null;
+
+    private float titleBoostFactor = 0;
 
     private int limit = 0;
 
@@ -43,6 +48,14 @@ public class QueryParameterBag
         if (this.timeBoostScale == 0) {
             this.timeBoostScale = queryConfig.getTimeBoostScale();
         }
+
+        if (this.enableTitleBoost == null) {
+            this.enableTitleBoost = queryConfig.getEnableTitleBoost();
+        }
+
+        if (this.titleBoostFactor == 0) {
+            this.titleBoostFactor = queryConfig.getTitleBoostFactor();
+        }
     }
 
     public Instant getFromSourceDateTime() { return fromSourceDateTime; }
@@ -57,6 +70,10 @@ public class QueryParameterBag
 
     public int getTimeBoostScale() { return timeBoostScale; }
 
+    public Boolean getEnableTitleBoost() { return enableTitleBoost; }
+
+    public float getTitleBoostFactor() { return titleBoostFactor; }
+
     public String  getCollection() { return this.collection; }
 
     public void setFromSourceDateTime(Instant fromSourceDateTime) { this.fromSourceDateTime = fromSourceDateTime; }
@@ -68,6 +85,10 @@ public class QueryParameterBag
     public void setEnableTimeBoost(Boolean enableTimeBoost) { this.enableTimeBoost = enableTimeBoost; }
 
     public void setTimeBoostScale(int timeBoostScale) { this.timeBoostScale = timeBoostScale; }
+
+    public void setEnableTitleBoost(Boolean enableTitleBoost) { this.enableTitleBoost = enableTitleBoost; }
+
+    public void setTitleBoostFactor(float titleBoostFactor) { this.titleBoostFactor = titleBoostFactor; }
 
     public void setLimit(int limit) { this.limit = limit; }
 

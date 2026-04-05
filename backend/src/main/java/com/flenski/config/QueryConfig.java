@@ -22,6 +22,12 @@ public class QueryConfig {
     @Value("${flenski.query.parameters.timeBoost.dateField}")
     private String timeBoostDateField;
 
+    @Value("${flenski.query.parameters.titleBoost.factor}")
+    private float titleBoostFactor;
+
+    @Value("${flenski.query.parameters.timeBoost.enable}")
+    private boolean enableTitleBoost;
+
     @Value("${flenski.query.parameters.limit}")
     private int limit;
 
@@ -68,5 +74,13 @@ public class QueryConfig {
 
     public String getCollection(String mode) {
         return mode.equals("production") ? collectionName : testCollectionName;
+    }
+
+    public boolean getEnableTitleBoost() {
+        return this.enableTitleBoost;
+    }
+
+    public float getTitleBoostFactor() {
+        return this.titleBoostFactor;
     }
 }

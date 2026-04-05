@@ -7,6 +7,8 @@ export const useSettingsStore = defineStore('settings', () => {
   const fromSourceDateTime = ref<string | null>(null)
   const untilSourceDateTime = ref<string | null>(null)
   const timeBoostScale = ref<number>(0)
+  const titleBoost = ref<boolean>(false)
+  const titleBoostFactor = ref<number>(0)
   const limit = ref<number>(0)
   const collection = ref<string>('production')
 
@@ -18,8 +20,9 @@ export const useSettingsStore = defineStore('settings', () => {
     timeBoostScale,
     limit,
     collection,
+    titleBoostFactor,
+    titleBoost
   }
 }, {
   persist: true,
 })
-
