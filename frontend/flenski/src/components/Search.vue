@@ -46,7 +46,8 @@ async function onSearch() {
         limit: settingsStore.limit,
         collection: settingsStore.collection || null,
         enableTitleBoost: settingsStore.titleBoost || false,
-        titleBoostFactor: settingsStore.titleBoostFactor || 0
+        titleBoostFactor: settingsStore.titleBoostFactor || 0,
+        categories: settingsStore.categories
       }),
     })
 
@@ -110,6 +111,18 @@ function handleSseEvent(eventName: string, data: string) {
     isWaitingForAnswer.value = false
   }
 }
+
+function toggleCategory(category: string) {
+  if (settingsStore.categories.includes(category)) {
+    settingsStore.categories = settingsStore.categories.filter(c => c !== category)
+  } else {
+    settingsStore.categories = [...settingsStore.categories, category]
+  }
+}
+
+function isCategorySelected(category: string) {
+  return settingsStore.categories.includes(category)
+}
 </script>
 <template>
   <div class="flex flex-col items-center justify-center gap-8 p-6 bg-white">
@@ -124,6 +137,20 @@ function handleSseEvent(eventName: string, data: string) {
       />
       <Button label="Fragen" icon="pi pi-search" @click="onSearch" size="large" />
     </div>
+
+    <!-- Category tags -->
+    <div class="flex flex-wrap gap-2 my-2">
+      <Tag
+        v-for="category in settingsStore.categories"
+        :key="category"
+        :value="category"
+        size="small"
+        :severity="isCategorySelected(category) ? 'success' : 'info'"
+        class="cursor-pointer"
+        @click="() => toggleCategory(category)"
+      />
+    </div>
+
     <DateRange :startDate="startDate" :endDate="endDate" />
     <Answer v-if="answer" :answer="answer" />
     <ProgressSpinner v-if="isWaitingForAnswer" style="width: 40px" strokeWidth="6" />

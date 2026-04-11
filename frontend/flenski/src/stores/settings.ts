@@ -1,3 +1,4 @@
+
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
@@ -11,6 +12,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const titleBoostFactor = ref<number>(0)
   const limit = ref<number>(0)
   const collection = ref<string>('production')
+  const categories = ref<string[]>([])
 
   return {
     searchType,
@@ -21,8 +23,10 @@ export const useSettingsStore = defineStore('settings', () => {
     limit,
     collection,
     titleBoostFactor,
-    titleBoost
+    titleBoost,
+    categories,
   }
 }, {
   persist: true,
 })
+

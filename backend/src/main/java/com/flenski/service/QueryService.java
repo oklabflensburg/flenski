@@ -1,33 +1,14 @@
 package com.flenski.service;
 
 import com.flenski.BoostQuerySumExpressionBuilder;
-import com.flenski.PreConfiguredQueryBuilder;
 import com.flenski.QueryPointsBuilder;
-import com.flenski.config.IndexingConfig;
 import com.flenski.config.QueryConfig;
 import com.flenski.dto.DocumentDto;
 import com.flenski.dto.QueryParameterBag;
 import io.qdrant.client.QdrantClient;
-import io.qdrant.client.grpc.Common;
 import io.qdrant.client.grpc.Points;
 import io.qdrant.client.grpc.Points.QueryPoints;
-import static io.qdrant.client.ExpressionFactory.datetime;
-import static io.qdrant.client.ExpressionFactory.datetimeKey;
-import static io.qdrant.client.ExpressionFactory.expDecay;
-import static io.qdrant.client.ExpressionFactory.sum;
-import static io.qdrant.client.ExpressionFactory.variable;
-import static io.qdrant.client.QueryFactory.formula;
-import static io.qdrant.client.QueryFactory.nearest;
-
-import io.qdrant.client.grpc.Points.DecayParamsExpression;
-import io.qdrant.client.grpc.Points.Formula;
-import io.qdrant.client.grpc.Points.SumExpression;
-
-import java.time.Instant;
 import java.util.List;
-
-import static io.qdrant.client.QueryFactory.fusion;
-
 import com.flenski.config.VectorStoreClientConfig;
 
 import org.slf4j.Logger;
@@ -73,6 +54,7 @@ public class QueryService {
         QueryPoints queryPoints = QueryPointsBuilder.newBuilder(queryParameterBag, queryConfig)
                 .setSparsePrefetchQuery(sparseVector, queryParameterBag.getLimit())
                 .setExpressionQuery(expressionQuery)
+                .setFilterByCategories(queryParameterBag.getCategories())
                 .build();
 
         List<Points.ScoredPoint> scoredPoints = client.queryAsync(queryPoints).get();

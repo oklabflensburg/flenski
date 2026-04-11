@@ -18,7 +18,18 @@ const searchTypes = [
 ]
 
 const settingsStore = useSettingsStore()
-const { searchType, timeBoost, timeBoostScale, limit, collection, titleBoost, titleBoostFactor } = storeToRefs(settingsStore)
+const { searchType, timeBoost, timeBoostScale, limit, collection, titleBoost, titleBoostFactor, categories } = storeToRefs(settingsStore)
+const categoriesString = computed({
+  get: () => (categories.value && categories.value.length > 0)
+    ? categories.value.join(', ')
+    : '',
+  set: (val: string) => {
+    categories.value = val
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+  }
+})
 
 const collections = [
   { label: 'Produktion', value: 'production' },
@@ -69,6 +80,15 @@ const untilDate = computed<Date | null>({
         />
       </div>
       <div class="flex flex-col gap-2">
+        <label for="categories" class="font-medium text-gray-700">Categories</label>
+        <input
+          id="categories"
+          v-model="categoriesString"
+          type="text"
+          class="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+          placeholder="e.g. news, sports, tech"
+        />
+        <small class="text-gray-500">Comma-separated list of categories.</small>
       </div>
       <div class="flex flex-col gap-2">
       </div>
@@ -184,7 +204,6 @@ const untilDate = computed<Date | null>({
         />
         <small class="text-gray-500">Maximale Anzahl an Suchergebnissen. 0 = Konfigurationsstandard.</small>
       </div>
-
     </form>
   </Dialog>
 </template>

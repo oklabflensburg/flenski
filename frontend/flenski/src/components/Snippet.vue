@@ -2,8 +2,11 @@
 import type { Document } from '@/types/document'
 import Card from 'primevue/card'
 import { computed } from 'vue'
+import { useSettingsStore } from '@/stores/settings'
 
 const props = defineProps<{ document: Document; keyword?: string }>()
+
+const settingsStore = useSettingsStore()
 
 const highlightedContent = computed(() => {
   if (!props.document.content || !props.keyword) return props.document.content
@@ -23,6 +26,16 @@ function formatDate(dateString?: string): string {
     day: 'numeric',
   })
 }
+
+function toggleCategoryInSettings(category: string) {
+  if (settingsStore.categories.includes(category)) {
+    settingsStore.categories = settingsStore.categories.filter(c => c !== category)
+  } else {
+    settingsStore.categories = [...settingsStore.categories, category]
+  }
+}
+
+const isCategoryActive = (category: string) => settingsStore.categories.includes(category)
 </script>
 
 <template>
@@ -51,11 +64,13 @@ function formatDate(dateString?: string): string {
 
         <div class="flex gap-1">
           <Tag
-            severity="info"
             v-for="category in document.categories"
             :key="category"
             size="small"
             :value="category"
+            :severity="isCategoryActive(category) ? 'success' : 'info'"
+            class="cursor-pointer"
+            @click="toggleCategoryInSettings(category)"
           />
           <Tag v-if="document.type" size="small" :value="document.type" />
           <Tag severity="secondary" v-if="document.group" size="small" :value="document.group" />
