@@ -33,6 +33,10 @@ public class QueryParameterBag
 
     private List<String> categories;
 
+    private float sparseSearchScoreThreshold = 0.0f;
+
+    private float denseSearchScoreThreshold = 0.0f;
+
     public enum QueryMode
     {
         LEXICAL,
@@ -62,6 +66,14 @@ public class QueryParameterBag
 
         if (this.titleBoostFactor == 0) {
             this.titleBoostFactor = queryConfig.getTitleBoostFactor();
+        }
+
+        if (this.sparseSearchScoreThreshold == 0.0f) {
+            this.sparseSearchScoreThreshold = queryConfig.getSparseSearchScoreThreshold();
+        }
+
+        if (this.denseSearchScoreThreshold == 0.0f) {
+            this.denseSearchScoreThreshold = queryConfig.getDenseSearchScoreThreshold();
         }
     }
 }

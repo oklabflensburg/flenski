@@ -43,6 +43,12 @@ public class QueryConfig {
     @Value("${spring.ai.vectorstore.qdrant.collection-test}")
     private String testCollectionName;
 
+    @Value("${flenski.query.parameters.sparseSearchScoreThreshold}")
+    private float sparseSearchScoreThreshold;
+
+    @Value("${flenski.query.parameters.denseSearchScoreThreshold}")
+    private float denseSearchScoreThreshold;
+
     public QueryParameterBag.QueryMode getQueryMode() {
         return queryMode;
     }
@@ -83,4 +89,8 @@ public class QueryConfig {
     public float getTitleBoostFactor() {
         return this.titleBoostFactor;
     }
+
+    public float getSparseSearchScoreThreshold() { return this.sparseSearchScoreThreshold; }
+
+    public float getDenseSearchScoreThreshold() { return this.denseSearchScoreThreshold; }
 }

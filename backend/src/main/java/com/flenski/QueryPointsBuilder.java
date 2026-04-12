@@ -23,6 +23,7 @@ public class QueryPointsBuilder {
 
         QueryParameterBag queryParameterBag;
         Points.PrefetchQuery sparsePrefetchQuery;
+        Points.PrefetchQuery densePrefetchQuery;
         TimeBoostParameters timeBoostParameters;
         QueryConfig queryConfig;
         Points.Query expressionQuery;
@@ -50,6 +51,17 @@ public class QueryPointsBuilder {
                     .setQuery(nearest(sparseVector.getValuesList(), sparseVector.getIndicesList()))
                     .setUsing(IndexingConfig.sparseVectorName)
                     .setLimit(limit)
+                    .setScoreThreshold(this.queryParameterBag.getSparseSearchScoreThreshold())
+                    .build();
+            return this;
+        }
+
+        public Builder setDensePrefetchQuery(Points.DenseVector denseVector, int limit) {
+            this.densePrefetchQuery = Points.PrefetchQuery.newBuilder()
+                    .setQuery(nearest(denseVector.getDataList()))
+                    .setUsing(IndexingConfig.denseVectorName)
+                    .setLimit(limit)
+                    .setScoreThreshold(this.queryParameterBag.getDenseSearchScoreThreshold())
                     .build();
             return this;
         }
@@ -70,6 +82,10 @@ public class QueryPointsBuilder {
 
             if (this.sparsePrefetchQuery != null) {
                 builder.addPrefetch(this.sparsePrefetchQuery);
+            }
+
+            if (this.densePrefetchQuery != null) {
+                builder.addPrefetch(this.densePrefetchQuery);
             }
 
             if (this.expressionQuery != null) {

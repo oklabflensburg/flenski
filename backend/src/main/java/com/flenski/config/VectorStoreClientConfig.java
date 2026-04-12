@@ -26,7 +26,6 @@ public class VectorStoreClientConfig {
 
     @Bean
     public QdrantClient vectorStoreClient() {
-
         QdrantClient client = new QdrantClient(
             QdrantGrpcClient.newBuilder(host, port, useTls)
                 .withApiKey(apiKey)

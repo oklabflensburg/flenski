@@ -38,6 +38,7 @@ public class QueryService {
 
     public List<DocumentDto> query(QdrantClient client, String message, QueryParameterBag queryParameterBag, QueryConfig queryConfig) throws Exception {
         Points.SparseVector sparseVector = sparseVectorService.embed(message);
+        Points.DenseVector denseVector = denseVectorService.embed(message);
 
         BoostQuerySumExpressionBuilder.Builder sumExpressionBuilder = BoostQuerySumExpressionBuilder.newBuilder();
 
@@ -52,7 +53,8 @@ public class QueryService {
         Points.Query expressionQuery = sumExpressionBuilder.build();
 
         QueryPoints queryPoints = QueryPointsBuilder.newBuilder(queryParameterBag, queryConfig)
-                .setSparsePrefetchQuery(sparseVector, queryParameterBag.getLimit())
+               // .setSparsePrefetchQuery(sparseVector, queryParameterBag.getLimit())
+                .setDensePrefetchQuery(denseVector, queryParameterBag.getLimit())
                 .setExpressionQuery(expressionQuery)
                 .setFilterByCategories(queryParameterBag.getCategories())
                 .build();

@@ -1,6 +1,8 @@
 package com.flenski;
 
 import io.qdrant.client.grpc.Points;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 
@@ -15,6 +17,8 @@ public class BoostQuerySumExpressionBuilder {
     }
 
     public static class Builder {
+
+        private static final Logger logger = LoggerFactory.getLogger(Builder.class);
 
         Points.Expression timeBoostExpression;
         Points.Expression titleBoostExpression;
@@ -31,6 +35,7 @@ public class BoostQuerySumExpressionBuilder {
             if (dateTimeField == null || dateTimeField.isBlank())
                 throw new IllegalArgumentException("dateTimeField must not be blank");
 
+            logger.info("Set TimeBoost. MidpPoint: {}, scaleDays: {} ", midPoint, scaleDays);
             this.timeBoostExpression = expDecay(
                     Points.DecayParamsExpression.newBuilder()
                             .setX(datetimeKey(dateTimeField))
@@ -51,6 +56,7 @@ public class BoostQuerySumExpressionBuilder {
         public Builder setTitleBoost(String query, float boost) {
             if (query == null || query.isBlank()) throw new IllegalArgumentException("query must not be blank");
 
+            logger.info("Set titleBoost. Boost: {}", boost);
             this.titleBoostExpression = mult(
                     Points.MultExpression.newBuilder()
                             .addMult(constant(boost))

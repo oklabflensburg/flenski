@@ -14,6 +14,11 @@
         </encoder>
     </appender>
 
+
+    <logger name="com.flenski.BoostQuerySumExpressionBuilder$Builder" level="INFO" additivity="false">
+        <appender-ref ref="CHATCONTROLLER_FILE"/>
+    </logger>
+
     <logger name="com.flenski.controller.ChatController" level="INFO" additivity="false">
         <appender-ref ref="CHATCONTROLLER_FILE"/>
     </logger>
