@@ -83,8 +83,8 @@ public class IndexController {
                                                 )
                                         )
                                 )
-                                .setSparseVectorsConfig(SparseVectorConfig.newBuilder().putMap(
-                                        "sparse", SparseVectorParams.getDefaultInstance()))
+                                .setSparseVectorsConfig(SparseVectorConfig.newBuilder().putMap("sparse", SparseVectorParams.newBuilder().setModifier(Collections.Modifier.Idf).build())
+                                )
                                 .build())
                 .get();
 

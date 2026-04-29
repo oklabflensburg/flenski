@@ -37,8 +37,6 @@ public class QueryService {
     }
 
     public List<DocumentDto> query(QdrantClient client, String message, QueryParameterBag queryParameterBag, QueryConfig queryConfig) throws Exception {
-        Points.SparseVector sparseVector = sparseVectorService.embed(message);
-        Points.DenseVector denseVector = denseVectorService.embed(message);
 
         BoostQuerySumExpressionBuilder.Builder sumExpressionBuilder = BoostQuerySumExpressionBuilder.newBuilder();
 
@@ -50,11 +48,19 @@ public class QueryService {
             sumExpressionBuilder.setTitleBoost(message, queryParameterBag.getTitleBoostFactor());
         }
 
-        Points.Query expressionQuery = sumExpressionBuilder.build();
+        QueryPointsBuilder.Builder queryPointsBuilder = QueryPointsBuilder.newBuilder(queryParameterBag, queryConfig);
+        if (queryParameterBag.getQueryMode() == QueryParameterBag.QueryMode.LEXICAL || queryParameterBag.getQueryMode() == QueryParameterBag.QueryMode.HYBRID) {
+            Points.SparseVector sparseVector = sparseVectorService.embed(message);
+            queryPointsBuilder.setSparsePrefetchQuery(sparseVector, queryParameterBag.getLimit());
+        }
 
-        QueryPoints queryPoints = QueryPointsBuilder.newBuilder(queryParameterBag, queryConfig)
-               // .setSparsePrefetchQuery(sparseVector, queryParameterBag.getLimit())
-                .setDensePrefetchQuery(denseVector, queryParameterBag.getLimit())
+        if (queryParameterBag.getQueryMode() == QueryParameterBag.QueryMode.SEMANTIC || queryParameterBag.getQueryMode() == QueryParameterBag.QueryMode.HYBRID) {
+            Points.DenseVector denseVector = denseVectorService.embed(message);
+            queryPointsBuilder.setDensePrefetchQuery(denseVector, queryParameterBag.getLimit());
+        }
+
+        Points.Query expressionQuery = sumExpressionBuilder.build();
+        QueryPoints queryPoints = queryPointsBuilder
                 .setExpressionQuery(expressionQuery)
                 .setFilterByCategories(queryParameterBag.getCategories())
                 .build();
@@ -63,33 +69,4 @@ public class QueryService {
         scoredPoints = scoredPoints.stream().toList();
         return scoredPoints.stream().map(DocumentDto::fromScoredPoint).toList();
     }
-/*
-    public QueryPoints buildQuery(Points.SparseVector sparseVector, Points.DenseVector denseVector, List<Common.Condition> filterConditions) {
-        return QueryPoints.newBuilder()
-                .setCollectionName(vectorStoreClientConfig.getCollectionName())
-                .setLimit(100)
-                .setScoreThreshold(2f)
-                .addPrefetch(Points.PrefetchQuery.newBuilder()
-                        .setQuery(nearest(sparseVector.getValuesList(), sparseVector.getIndicesList()))
-                        .setUsing("sparse")
-                        .setLimit(100)
-                        .setScoreThreshold(0.5f)
-                        .build())
-
-                .addPrefetch(Points.PrefetchQuery.newBuilder()
-                        .setQuery(nearest(denseVector.getDataList()))
-                        .setUsing("dense")
-                        .setScoreThreshold(0.75f)
-                        .setLimit(100)
-                        .build())
-
-                .setWithPayload(Points.WithPayloadSelector.newBuilder().setEnable(true).build())
-                .setQuery(fusion(Points.Fusion.RRF))
-                .setFilter(
-                        Common.Filter.newBuilder()
-                                .addAllMust(filterConditions)
-                                .build())
-                .build();
-    }
-*/
 }
