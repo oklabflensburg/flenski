@@ -1,6 +1,5 @@
-
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import {defineStore} from 'pinia'
+import {ref} from 'vue'
 
 export const useSettingsStore = defineStore('settings', () => {
   const searchType = ref<string>('hybrid')
@@ -14,6 +13,29 @@ export const useSettingsStore = defineStore('settings', () => {
   const collection = ref<string>('production')
   const categories = ref<string[]>([])
 
+  async function fetchDefaultParameters() {
+    try {
+      const backendEndpoint = import.meta.env.VITE_BACKEND_ENDPOINT
+      const url = `${backendEndpoint.replace(/\/$/, '')}/api/chat/defaultParameters`
+      const response = await fetch(url, { method: 'get' })
+      if (!response.ok) throw new Error('Failed to fetch default parameters')
+      const data = await response.json()
+      if (data.queryMode) searchType.value = data.queryMode.toLowerCase()
+      if (data.enableTimeBoost !== undefined) timeBoost.value = data.enableTimeBoost
+      if (data.fromSourceDateTime) fromSourceDateTime.value = data.fromSourceDateTime
+      if (data.untilSourceDateTime) untilSourceDateTime.value = data.untilSourceDateTime
+      if (data.timeBoostScale !== undefined) timeBoostScale.value = data.timeBoostScale
+      if (data.limit !== undefined) limit.value = data.limit
+      if (data.collection) collection.value = data.collection
+      if (data.enableTitleBoost !== undefined) titleBoost.value = data.enableTitleBoost
+      if (data.titleBoostFactor !== undefined) titleBoostFactor.value = data.titleBoostFactor
+      if (Array.isArray(data.categories)) categories.value = data.categories
+    } catch (e) {
+      // Optionally handle error (e.g., show notification)
+      // console.error(e)
+    }
+  }
+
   return {
     searchType,
     timeBoost,
@@ -25,6 +47,7 @@ export const useSettingsStore = defineStore('settings', () => {
     titleBoostFactor,
     titleBoost,
     categories,
+    fetchDefaultParameters,
   }
 }, {
   persist: true,

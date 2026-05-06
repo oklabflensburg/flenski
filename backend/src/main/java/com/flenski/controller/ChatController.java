@@ -11,7 +11,6 @@ import com.flenski.service.QueryService;
 import com.flenski.service.SparseVectorService;
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.QdrantGrpcClient;
-import io.qdrant.client.grpc.Points;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -67,6 +66,13 @@ public class ChatController {
         this.dateRangeTransformer = dateRangeTransformer;
         this.queryService = queryService;
         this.queryConfig = queryConfig;
+    }
+
+    @GetMapping("defaultParameters")
+    public QueryParameterBag defaultParameters() {
+        QueryParameterBag queryParameterBag = new QueryParameterBag();
+        queryParameterBag.initFromConfig(queryConfig);
+        return queryParameterBag;
     }
 
     @PostMapping("query")

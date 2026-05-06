@@ -37,8 +37,7 @@ public class QueryParameterBag
 
     private float denseSearchScoreThreshold = 0.0f;
 
-    public enum QueryMode
-    {
+    public enum QueryMode {
         LEXICAL,
         SEMANTIC,
         HYBRID
@@ -48,6 +47,7 @@ public class QueryParameterBag
         if (this.queryMode == null) {
             this.queryMode = queryConfig.getQueryMode();
         }
+
         if (this.enableTimeBoost == null) {
             this.enableTimeBoost = queryConfig.getEnableTimeBoost();
         }
