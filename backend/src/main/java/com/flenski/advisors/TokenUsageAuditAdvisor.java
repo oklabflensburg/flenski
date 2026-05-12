@@ -8,7 +8,9 @@ import org.springframework.ai.chat.client.advisor.api.CallAdvisor;
 import org.springframework.ai.chat.client.advisor.api.CallAdvisorChain;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.stereotype.Component;
 
+@Component
 public class TokenUsageAuditAdvisor implements CallAdvisor {
 
     private static final Logger logger = LoggerFactory.getLogger(TokenUsageAuditAdvisor.class);

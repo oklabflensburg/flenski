@@ -45,6 +45,14 @@
         <appender-ref ref="INDEXCONTROLLER_FILE"/>
     </logger>
 
+    <logger name="com.flenski.advisors" level="INFO" additivity="false">
+        <appender-ref ref="CHATCONTROLLER_FILE"/>
+    </logger>
+
+    <logger name="com.flenski.queryTransformers" level="INFO" additivity="false">
+        <appender-ref ref="CHATCONTROLLER_FILE"/>
+    </logger>
+
 
     <root level="INFO">
         <appender-ref ref="FILE"/>
