@@ -6,6 +6,7 @@ import com.flenski.dto.DocumentDto;
 import com.flenski.dto.QueryParameterBag;
 import com.flenski.queryTransformers.CompressionTransformer;
 import com.flenski.queryTransformers.DateRangeTransformer;
+import com.flenski.service.ChatService;
 import com.flenski.service.DenseVectorService;
 import com.flenski.service.QueryService;
 import com.flenski.service.SparseVectorService;
@@ -37,6 +38,7 @@ public class ChatController {
     private final ChatClient chatClient;
     private final QueryService queryService;
     private final QueryConfig queryConfig;
+    private final ChatService chatService;
 
     @Value("classpath:/promptTemplates/systemPromptTemplate.st")
     Resource systemPromptTemplate;
@@ -49,7 +51,8 @@ public class ChatController {
             DateRangeTransformer dateRangeTransformer,
             ChatClient chatClient,
             QueryService queryService,
-            QueryConfig queryConfig
+            QueryConfig queryConfig,
+            ChatService chatService
     ) {
         logger.info("Initializing ChatController with host: {} and port: {} and collection: {}", vectorStoreClientConfig.getHost(), vectorStoreClientConfig.getPort(), vectorStoreClientConfig.getCollectionName());
         this.client = new QdrantClient(
@@ -66,6 +69,7 @@ public class ChatController {
         this.dateRangeTransformer = dateRangeTransformer;
         this.queryService = queryService;
         this.queryConfig = queryConfig;
+        this.chatService = chatService;
     }
 
     @GetMapping("defaultParameters")
@@ -88,9 +92,16 @@ public class ChatController {
         SseEmitter emitter = new SseEmitter();
         new Thread(() -> {
             try {
-                    List<DocumentDto> documents = queryService.query(client, message, queryParameterBag, queryConfig);
+                    String transformedMessage = compressionTransformer.transform(message);
+                    emitter.send(SseEmitter.event().name("message").data("Suche nach: \"" + transformedMessage + "\""));
 
+                    List<DocumentDto> documents = queryService.query(client, message, queryParameterBag, queryConfig);
                     logger.info("Query returned  {} results ", documents.size());
+
+                    String answer = chatService.ask(message, documents);
+                    emitter.send(SseEmitter.event().name("answer").data(answer));
+                    logger.info("Received answer: {}", answer);
+
                     emitter.send(SseEmitter.event().name("documents").data(documents));
                     emitter.complete();
 

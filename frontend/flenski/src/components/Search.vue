@@ -15,6 +15,7 @@ const searchResults = ref<Document[]>([])
 const searched = ref(false)
 const isWaitingForAnswer = ref(false)
 const answer = ref('')
+^^const messages = ref<string[]>([])
 const startDate = ref<string | null>(null)
 const endDate = ref<string | null>(null)
 
@@ -32,6 +33,7 @@ async function onSearch() {
   isWaitingForAnswer.value = true
   const backendEndpoint = import.meta.env.VITE_BACKEND_ENDPOINT
   const url = `${backendEndpoint.replace(/\/$/, '')}/api/chat/query?q=${encodeURIComponent(searchTerm.value)}`
+  messages.value = []
 
   try {
     const response = await fetch(url, {
@@ -109,6 +111,8 @@ function handleSseEvent(eventName: string, data: string) {
   } else if (eventName === 'answer') {
     answer.value = data
     isWaitingForAnswer.value = false
+  } else if (eventName === 'message') {
+      messages.value.push(data)
   }
 }
 
@@ -150,6 +154,10 @@ function isCategorySelected(category: string) {
         @click="() => toggleCategory(category)"
       />
     </div>
+
+    <div v-for="(message) in messages" :key="message" class="text-sm">{{ message }}</div>
+
+
 
     <DateRange :startDate="startDate" :endDate="endDate" />
     <Answer v-if="answer" :answer="answer" />
