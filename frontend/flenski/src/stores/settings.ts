@@ -12,6 +12,8 @@ export const useSettingsStore = defineStore('settings', () => {
   const limit = ref<number>(0)
   const collection = ref<string>('production')
   const categories = ref<string[]>([])
+  const sparseSearchScoreThreshold = ref<number | null>(null)
+  const denseSearchScoreThreshold = ref<number | null>(null)
 
   async function fetchDefaultParameters() {
     try {
@@ -30,6 +32,8 @@ export const useSettingsStore = defineStore('settings', () => {
       if (data.enableTitleBoost !== undefined) titleBoost.value = data.enableTitleBoost
       if (data.titleBoostFactor !== undefined) titleBoostFactor.value = data.titleBoostFactor
       if (Array.isArray(data.categories)) categories.value = data.categories
+      if (data.sparseSearchScoreThreshold !== undefined) sparseSearchScoreThreshold.value = data.sparseSearchScoreThreshold
+      if (data.denseSearchScoreThreshold !== undefined) denseSearchScoreThreshold.value = data.denseSearchScoreThreshold
     } catch (e) {
       // Optionally handle error (e.g., show notification)
       // console.error(e)
@@ -48,6 +52,8 @@ export const useSettingsStore = defineStore('settings', () => {
     titleBoost,
     categories,
     fetchDefaultParameters,
+    sparseSearchScoreThreshold,
+    denseSearchScoreThreshold,
   }
 }, {
   persist: true,

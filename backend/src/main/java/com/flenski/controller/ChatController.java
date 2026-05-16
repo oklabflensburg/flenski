@@ -21,7 +21,10 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chat/")
@@ -102,13 +105,25 @@ public class ChatController {
                     emitter.send(SseEmitter.event().name("answer").data(answer));
                     logger.info("Received answer: {}", answer);
 
-                    emitter.send(SseEmitter.event().name("documents").data(documents));
+                    List<DocumentDto> documentsGrouped  = groupDocuments(documents);
+                    emitter.send(SseEmitter.event().name("documents").data(documentsGrouped));
                     emitter.complete();
 
             } catch (Exception e) {
+                this.logger.error(e.getMessage());
                 emitter.completeWithError(e);
             }
         }).start();
         return emitter;
+    }
+
+    public List<DocumentDto> groupDocuments(List<DocumentDto> documents) {
+
+        Map<String, DocumentDto> documentsMap = new LinkedHashMap<>();
+        for (DocumentDto document : documents) {
+            documentsMap.merge(document.getIdentifier(), document,
+                    (existing, incoming) -> existing.getScore() >= incoming.getScore() ? existing : incoming);
+        }
+      return new ArrayList<>(documentsMap.values());
     }
 }

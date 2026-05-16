@@ -45,19 +45,6 @@ function closeDialog() {
       <p>Fragen, Kommentare und Anregungen sind gerne per E-Mail an <a
         href="mailto:hendrik@oklabflensburg.de">hendrik@oklabflensburg.de</a>
         zugänglich.</p>
-
-      <h2>Versionshistorie</h2>
-      <ul>
-        <li><strong>Version 0.1:</strong> enthält Dokumente der Ratsversammlung
-          ab 2017 und wird laufend aktualisiert.</li>
-        <li>Bewerterfragen werden in Suchanfragen umgewandelt, eine hybride
-          Suche durchgeführt und eine Antwort basierend auf den gefundenen
-          Dokumenten generiert.</li>
-        <li>Die KI-Antwort wird zusammen mit den Dokumenten angezeigt, auf denen
-          sie basiert.</li>
-        <li>Das System erkennt, wenn Fragen sich auf eine bestimmte Zeit
-          beziehen, und filtert die Dokumente entsprechend.</li>
-      </ul>
     </div>
   </Dialog>
 </template>

@@ -8,6 +8,7 @@ import io.qdrant.client.grpc.Points;
 import static io.qdrant.client.ConditionFactory.matchKeyword;
 import java.util.List;
 
+import static io.qdrant.client.QueryFactory.fusion;
 import static io.qdrant.client.QueryFactory.nearest;
 
 public class QueryPointsBuilder {
@@ -26,8 +27,9 @@ public class QueryPointsBuilder {
         Points.PrefetchQuery densePrefetchQuery;
         TimeBoostParameters timeBoostParameters;
         QueryConfig queryConfig;
-        Points.Query expressionQuery;
         Common.Filter categoriesFilter;
+        Points.Query expressionQuery;
+        Points.Query rrfQuery;
 
         public Builder(QueryParameterBag queryParameterBag, QueryConfig queryConfig) {
             this.queryParameterBag = queryParameterBag;
@@ -71,6 +73,11 @@ public class QueryPointsBuilder {
             return this;
         }
 
+        public Builder setRrfQuery() {
+            this.rrfQuery = fusion(Points.Fusion.RRF);
+            return this;
+        }
+
         public Points.QueryPoints build() {
             Points.QueryPoints.Builder builder = Points.QueryPoints.newBuilder()
                     .setCollectionName(queryConfig.getCollection(queryParameterBag.getCollection()))
@@ -91,6 +98,11 @@ public class QueryPointsBuilder {
             if (this.expressionQuery != null) {
                 builder.setQuery(this.expressionQuery);
             }
+
+            if (this.rrfQuery != null) {
+                builder.setQuery(this.rrfQuery);
+            }
+
             return builder.build();
         }
     }

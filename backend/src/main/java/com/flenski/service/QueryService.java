@@ -51,7 +51,7 @@ public class QueryService {
         QueryPointsBuilder.Builder queryPointsBuilder = QueryPointsBuilder.newBuilder(queryParameterBag, queryConfig);
         if (queryParameterBag.getQueryMode() == QueryParameterBag.QueryMode.LEXICAL || queryParameterBag.getQueryMode() == QueryParameterBag.QueryMode.HYBRID) {
             Points.SparseVector sparseVector = sparseVectorService.embed(message);
-            queryPointsBuilder.setSparsePrefetchQuery(sparseVector, queryParameterBag.getLimit());
+                queryPointsBuilder.setSparsePrefetchQuery(sparseVector, queryParameterBag.getLimit());
         }
 
         if (queryParameterBag.getQueryMode() == QueryParameterBag.QueryMode.SEMANTIC || queryParameterBag.getQueryMode() == QueryParameterBag.QueryMode.HYBRID) {
@@ -60,10 +60,15 @@ public class QueryService {
         }
 
         Points.Query expressionQuery = sumExpressionBuilder.build();
-        QueryPoints queryPoints = queryPointsBuilder
+        queryPointsBuilder
                 .setExpressionQuery(expressionQuery)
-                .setFilterByCategories(queryParameterBag.getCategories())
-                .build();
+                .setFilterByCategories(queryParameterBag.getCategories());
+
+        if (queryParameterBag.getQueryMode() == QueryParameterBag.QueryMode.HYBRID) {
+            queryPointsBuilder.setRrfQuery();
+        }
+
+        QueryPoints queryPoints = queryPointsBuilder.build();
 
         List<Points.ScoredPoint> scoredPoints = client.queryAsync(queryPoints).get();
         scoredPoints = scoredPoints.stream().toList();
