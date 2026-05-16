@@ -15,7 +15,7 @@ const searchResults = ref<Document[]>([])
 const searched = ref(false)
 const isWaitingForAnswer = ref(false)
 const answer = ref('')
-^^const messages = ref<string[]>([])
+const messages = ref<string[]>([])
 const startDate = ref<string | null>(null)
 const endDate = ref<string | null>(null)
 
@@ -49,7 +49,9 @@ async function onSearch() {
         collection: settingsStore.collection || null,
         enableTitleBoost: settingsStore.titleBoost || false,
         titleBoostFactor: settingsStore.titleBoostFactor || 0,
-        categories: settingsStore.categories
+        categories: settingsStore.categories,
+        sparseSearchScoreThreshold: settingsStore.sparseSearchScoreThreshold ?? null,
+        denseSearchScoreThreshold: settingsStore.denseSearchScoreThreshold ?? null,
       }),
     })
 

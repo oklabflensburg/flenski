@@ -24,6 +24,7 @@ public class CompressionTransformer {
                      Regeln: Entferne Füllwörter, Höflichkeit, Wiederholungen, allgemeine Phrasen.
                      Behalte unbedingt: Kernintention, Schlüsselbegriffe, Named Entities (Person/Ort/Firma/Produkt), Fachbegriffe, Zahlen/Datum/Zeit, Maßeinheiten, Bedingungen, Negationen (nicht/kein/ohne), Einschränkungen (nur/außer/bis/ab).
                      Verboten: Keine neuen Infos, keine Synonyme/Paraphrasen, keine Interpretation. Unklare/seltene Wörter behalten.
+                     Korrigiere offentsichtliche Rechtschreibfehler
                      Ausgabe: Nur die komprimierte schlüsselwörter, eine Zeile, keine Erklärungen.
 
 			Original Anfrage: {query}

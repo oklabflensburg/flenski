@@ -19,7 +19,7 @@ const searchTypes = [
 ]
 
 const settingsStore = useSettingsStore()
-const { searchType, timeBoost, timeBoostScale, limit, collection, titleBoost, titleBoostFactor, categories } = storeToRefs(settingsStore)
+const { searchType, timeBoost, timeBoostScale, limit, collection, titleBoost, titleBoostFactor, categories, sparseSearchScoreThreshold, denseSearchScoreThreshold } = storeToRefs(settingsStore)
 const categoriesString = computed({
   get: () => (categories.value && categories.value.length > 0)
     ? categories.value.join(', ')
@@ -155,11 +155,36 @@ const untilDate = computed<Date | null>({
 
       </div>
       <div class="flex flex-col gap-2"></div>
+      <div class="flex flex-col gap-2"></div>
 
 
       <div class="flex flex-col gap-2">
-
+        <label for="sparseSearchScoreThreshold" class="font-medium text-gray-700">Sparse Score Threshold</label>
+        <InputNumber
+          id="sparseSearchScoreThreshold"
+          v-model="sparseSearchScoreThreshold"
+          class="w-full"
+          placeholder="null = Standardwert"
+          size="small"
+          :minFractionDigits="0" :maxFractionDigits="4"
+        />
+        <small class="text-gray-500">Mindestscore für die lexikalische Suche.</small>
       </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="denseScoreThreshold" class="font-medium text-gray-700">Dense Score Threshold</label>
+        <InputNumber
+          id="denseScoreThreshold"
+          v-model="denseSearchScoreThreshold"
+          class="w-full"
+          placeholder="null = Standardwert"
+          size="small"
+          :minFractionDigits="0" :maxFractionDigits="4"
+        />
+        <small class="text-gray-500">Mindestscore für die semantische Suche.</small>
+      </div>
+      <div class="flex flex-col gap-2"></div>
+      <div class="flex flex-col gap-2"></div>
 
       <!-- Von Datum -->
       <div class="flex flex-col gap-2">
