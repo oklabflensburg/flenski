@@ -10,6 +10,7 @@ RUN apk add --no-cache bash
 
 RUN npm install
 
+RUN mkdir -p /app/flenski/node_modules && chown -R node:node /app/flenski/node_modules
 RUN chown -R node:node /app
 
 USER node
