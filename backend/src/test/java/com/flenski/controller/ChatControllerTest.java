@@ -7,6 +7,7 @@ import com.flenski.dto.QueryParameterBag;
 import com.flenski.queryTransformers.CompressionTransformer;
 import com.flenski.queryTransformers.DateRangeTransformer;
 import com.flenski.service.DenseVectorService;
+import com.flenski.service.ChatService;
 import com.flenski.service.QueryService;
 import com.flenski.service.SparseVectorService;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,7 @@ class ChatControllerTest {
     @Mock private ChatClient chatClient;
     @Mock private QueryService queryService;
     @Mock private QueryConfig queryConfig;
+    @Mock private ChatService chatService;
 
     private ChatController chatController;
 
@@ -52,7 +54,8 @@ class ChatControllerTest {
                 dateRangeTransformer,
                 chatClient,
                 queryService,
-                queryConfig
+                queryConfig,
+                chatService
         );
     }
 
